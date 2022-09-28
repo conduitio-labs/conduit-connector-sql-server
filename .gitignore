@@ -1,0 +1,8 @@
+# Intellij
+.idea
+
+# VSCode
+.vscode
+
+# Binary built with `make build`
+/conduit-connector-sql-server
