@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc.
+// Copyright © 2022 Meroxa, Inc & Yalantis.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,6 +96,16 @@ func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 	tableName := w.getTableName(record.Metadata)
 
+	payload, err := w.structurizeData(record.Payload.After)
+	if err != nil {
+		return fmt.Errorf("structurize payload: %w", err)
+	}
+
+	// if payload is empty return empty payload error
+	if payload == nil {
+		return ErrEmptyPayload
+	}
+
 	key, err := w.structurizeData(record.Key)
 	if err != nil {
 		return fmt.Errorf("structurize key: %w", err)
@@ -112,7 +122,7 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 		return ErrEmptyKey
 	}
 
-	query, args := w.buildUpdateQuery(tableName, keyColumn, keyValue)
+	query, args := w.buildUpdateQuery(tableName, keyColumn, keyValue, payload)
 
 	_, err = w.db.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -247,10 +257,21 @@ func (w *Writer) buildInsertQuery(table string, columns []string, values []any) 
 	return sb.Build()
 }
 
-func (w *Writer) buildUpdateQuery(table string, keyColumn string, keyValue any) (string, []any) {
+func (w *Writer) buildUpdateQuery(
+	table, keyColumn string,
+	keyValue any,
+	payload map[string]any,
+) (string, []any) {
 	sb := sqlbuilder.NewUpdateBuilder()
 
 	sb.Update(table)
+
+	setVal := make([]string, 0)
+	for key, val := range payload {
+		setVal = append(setVal, sb.Assign(key, val))
+	}
+
+	sb.Set(setVal...)
 	sb.Where(sb.Equal(keyColumn, keyValue))
 
 	return sb.Build()
