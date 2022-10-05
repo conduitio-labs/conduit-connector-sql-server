@@ -23,6 +23,8 @@ import (
 	"github.com/huandu/go-sqlbuilder"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+
+	"github.com/conduitio-labs/conduit-connector-sql-server/columntypes"
 )
 
 const (
@@ -32,9 +34,10 @@ const (
 
 // Writer implements a writer logic for db2 destination.
 type Writer struct {
-	db        *sql.DB
-	table     string
-	keyColumn string
+	db          *sql.DB
+	table       string
+	keyColumn   string
+	columnTypes map[string]string
 }
 
 // Params is an incoming params for the NewWriter function.
@@ -51,6 +54,13 @@ func NewWriter(ctx context.Context, params Params) (*Writer, error) {
 		table:     params.Table,
 		keyColumn: params.KeyColumn,
 	}
+
+	columnTypes, err := columntypes.GetColumnTypes(ctx, writer.db, writer.table)
+	if err != nil {
+		return nil, fmt.Errorf("get column types: %w", err)
+	}
+
+	writer.columnTypes = columnTypes
 
 	return writer, nil
 }
@@ -106,6 +116,11 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 		return ErrEmptyPayload
 	}
 
+	payload, err = columntypes.ConvertStructureData(ctx, w.columnTypes, payload)
+	if err != nil {
+		return fmt.Errorf("convert structure data: %w", err)
+	}
+
 	key, err := w.structurizeData(record.Key)
 	if err != nil {
 		return fmt.Errorf("structurize key: %w", err)
@@ -155,6 +170,11 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 	// if payload is empty return empty payload error
 	if payload == nil {
 		return ErrEmptyPayload
+	}
+
+	payload, err = columntypes.ConvertStructureData(ctx, w.columnTypes, payload)
+	if err != nil {
+		return fmt.Errorf("convert structure data: %w", err)
 	}
 
 	key, err := w.structurizeData(record.Key)
