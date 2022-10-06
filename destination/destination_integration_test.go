@@ -262,6 +262,118 @@ func TestIntegrationDestination_Write_Update_Success(t *testing.T) {
 	}
 }
 
+func TestIntegrationDestination_Write_Update_Composite_Keys_Success(t *testing.T) {
+	var preparedVarchar = "updated_test"
+
+	ctx := context.Background()
+
+	cfg, err := prepareConfig()
+	if err != nil {
+		t.Log(err)
+		t.Skip(err)
+	}
+
+	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	if err = db.PingContext(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	err = prepareTable(ctx, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+
+	dest := New()
+
+	err = dest.Configure(ctx, cfg)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = dest.Open(ctx)
+	if err != nil {
+		t.Error(err)
+	}
+
+	preparedData := map[string]any{
+		"id":         1,
+		"cl_bigint":  321765482,
+		"cl_tinyint": 2,
+		"cl_varchar": "test",
+		"cl_text":    "text_test",
+		"cl_date": time.Date(
+			2009, 11, 17, 20, 34, 58, 651387237, time.UTC),
+		"cl_numeric":   1234.1234,
+		"cl_decimal":   1234.1234,
+		"cl_varbinary": []byte("some test"),
+		"cl_float":     1234.1234,
+	}
+
+	count, err := dest.Write(ctx, []sdk.Record{
+		{
+			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
+			Operation: sdk.OperationSnapshot,
+			Key:       sdk.StructuredData{"id": "1"},
+		},
+	},
+	)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if count != 1 {
+		t.Error(errors.New("count mismatched"))
+	}
+
+	preparedData["cl_varchar"] = preparedVarchar
+
+	_, err = dest.Write(ctx, []sdk.Record{
+		{
+			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
+			Operation: sdk.OperationUpdate,
+			Key:       sdk.StructuredData{"id": "1", "cl_tinyint": 2},
+		},
+	},
+	)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// check if value was updated
+	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT cl_varchar FROM %s", integrationTable))
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer rows.Close()
+
+	var clVarchar string
+	for rows.Next() {
+		err = rows.Scan(&clVarchar)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	if clVarchar != preparedVarchar {
+		t.Error(errors.New("clVarchar and preparedVarchar not equal"))
+	}
+
+	err = dest.Teardown(ctx)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestIntegrationDestination_Write_Delete_Success(t *testing.T) {
 	ctx := context.Background()
 
@@ -380,7 +492,6 @@ func prepareConfig() (map[string]string, error) {
 
 	return map[string]string{
 		config.KeyConnection: conn,
-		config.KeyPrimaryKey: "id",
 		config.KeyTable:      integrationTable,
 	}, nil
 }

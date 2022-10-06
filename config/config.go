@@ -24,7 +24,6 @@ import (
 const (
 	KeyConnection string = "connection"
 	KeyTable      string = "table"
-	KeyPrimaryKey string = "primaryKey"
 )
 
 // Config contains configurable values
@@ -34,8 +33,6 @@ type Config struct {
 	Connection string `validate:"required"`
 	// Table is a name of the table that the connector should write to or read from.
 	Table string `validate:"required,max=128"`
-	// Key - Column name that records should use for their `Key` fields.
-	Key string `validate:"required,max=128"`
 }
 
 // Parse attempts to parse a provided map[string]string into a Config struct.
@@ -43,7 +40,6 @@ func Parse(cfg map[string]string) (Config, error) {
 	config := Config{
 		Connection: cfg[KeyConnection],
 		Table:      strings.ToUpper(cfg[KeyTable]),
-		Key:        strings.ToUpper(cfg[KeyPrimaryKey]),
 	}
 
 	if err := validator.Validate(&config); err != nil {

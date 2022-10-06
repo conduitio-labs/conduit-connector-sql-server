@@ -21,6 +21,4 @@ var (
 	ErrEmptyPayload = errors.New("payload is empty")
 	// ErrEmptyKey occurs when there is no value for key.
 	ErrEmptyKey = errors.New("key value must be provided")
-	// ErrCompositeKeysNotSupported occurs when there are more than one key in a Key map.
-	ErrCompositeKeysNotSupported = errors.New("composite keys not yet supported")
 )

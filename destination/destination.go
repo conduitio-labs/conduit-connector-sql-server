@@ -53,12 +53,6 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 			Required:    true,
 			Default:     "",
 		},
-		config.KeyPrimaryKey: {
-			Description: "A column name that used to detect if the target table" +
-				" already contains the record (destination).",
-			Required: true,
-			Default:  "",
-		},
 	}
 }
 
@@ -86,9 +80,8 @@ func (d *Destination) Open(ctx context.Context) error {
 	}
 
 	d.writer, err = writer.NewWriter(ctx, writer.Params{
-		DB:        db,
-		Table:     d.config.Table,
-		KeyColumn: d.config.Key,
+		DB:    db,
+		Table: d.config.Table,
 	})
 
 	if err != nil {

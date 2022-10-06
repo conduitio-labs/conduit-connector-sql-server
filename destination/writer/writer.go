@@ -75,23 +75,16 @@ func (w *Writer) Close(ctx context.Context) error {
 func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 	tableName := w.getTableName(record.Metadata)
 
-	key, err := w.structurizeData(record.Key)
+	keys, err := w.structurizeData(record.Key)
 	if err != nil {
 		return fmt.Errorf("structurize key: %w", err)
 	}
 
-	keyColumn, err := w.getKeyColumn(key)
-	if err != nil {
-		return fmt.Errorf("get key column: %w", err)
-	}
-
-	// return an error if we didn't find a value for the key
-	keyValue, ok := key[keyColumn]
-	if !ok {
+	if len(keys) == 0 {
 		return ErrEmptyKey
 	}
 
-	query, args := w.buildDeleteQuery(tableName, keyColumn, keyValue)
+	query, args := w.buildDeleteQuery(tableName, keys)
 
 	_, err = w.db.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -121,23 +114,16 @@ func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 		return fmt.Errorf("convert structure data: %w", err)
 	}
 
-	key, err := w.structurizeData(record.Key)
+	keys, err := w.structurizeData(record.Key)
 	if err != nil {
 		return fmt.Errorf("structurize key: %w", err)
 	}
 
-	keyColumn, err := w.getKeyColumn(key)
-	if err != nil {
-		return fmt.Errorf("get key column: %w", err)
-	}
-
-	// return an error if we didn't find a value for the key
-	keyValue, ok := key[keyColumn]
-	if !ok {
+	if len(keys) == 0 {
 		return ErrEmptyKey
 	}
 
-	query, args := w.buildUpdateQuery(tableName, keyColumn, keyValue, payload)
+	query, args := w.buildUpdateQuery(tableName, keys, payload)
 
 	_, err = w.db.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -177,25 +163,6 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 		return fmt.Errorf("convert structure data: %w", err)
 	}
 
-	key, err := w.structurizeData(record.Key)
-	if err != nil {
-		// if the key is not structured, we simply ignore it
-		// we'll try to insert just a payload in this case
-		sdk.Logger(ctx).Debug().Msgf("structurize key during upsert: %v", err)
-	}
-
-	keyColumn, err := w.getKeyColumn(key)
-	if err != nil {
-		return fmt.Errorf("get key column: %w", err)
-	}
-
-	// if the record doesn't contain the key, insert the key if it's not empty.
-	if _, ok := payload[keyColumn]; !ok {
-		if _, ok := key[keyColumn]; ok {
-			payload[keyColumn] = key[keyColumn]
-		}
-	}
-
 	columns, values := w.extractColumnsAndValues(payload)
 
 	query, args := w.buildInsertQuery(tableName, columns, values)
@@ -209,32 +176,21 @@ func (w *Writer) Insert(ctx context.Context, record sdk.Record) error {
 }
 
 // buildDeleteQuery generates an SQL DELETE statement query,
-// based on the provided table, keyColumn and keyValue.
-func (w *Writer) buildDeleteQuery(table string, keyColumn string, keyValue any) (string, []any) {
+// based on the provided table, and keys.
+func (w *Writer) buildDeleteQuery(table string, keys map[string]any) (string, []any) {
 	db := sqlbuilder.NewDeleteBuilder()
 
 	db.DeleteFrom(table)
-	db.Where(
-		db.Equal(keyColumn, keyValue),
-	)
+
+	for key, val := range keys {
+		db.Where(
+			db.Equal(key, val),
+		)
+	}
 
 	query, args := db.Build()
 
 	return query, args
-}
-
-// getKeyColumn returns either the first key within the Key structured data
-// or the default key configured value for key.
-func (w *Writer) getKeyColumn(key sdk.StructuredData) (string, error) {
-	if len(key) > 1 {
-		return "", ErrCompositeKeysNotSupported
-	}
-
-	for k := range key {
-		return k, nil
-	}
-
-	return w.keyColumn, nil
 }
 
 // structurizeData converts sdk.Data to sdk.StructuredData.
@@ -277,22 +233,23 @@ func (w *Writer) buildInsertQuery(table string, columns []string, values []any) 
 	return sb.Build()
 }
 
-func (w *Writer) buildUpdateQuery(
-	table, keyColumn string,
-	keyValue any,
-	payload map[string]any,
-) (string, []any) {
-	sb := sqlbuilder.NewUpdateBuilder()
+func (w *Writer) buildUpdateQuery(table string, keys, payload map[string]any) (string, []any) {
+	up := sqlbuilder.NewUpdateBuilder()
 
-	sb.Update(table)
+	up.Update(table)
 
 	setVal := make([]string, 0)
 	for key, val := range payload {
-		setVal = append(setVal, sb.Assign(key, val))
+		setVal = append(setVal, up.Assign(key, val))
 	}
 
-	sb.Set(setVal...)
-	sb.Where(sb.Equal(keyColumn, keyValue))
+	up.Set(setVal...)
 
-	return sb.Build()
+	for key, val := range keys {
+		up.Where(
+			up.Equal(key, val),
+		)
+	}
+
+	return up.Build()
 }

@@ -47,7 +47,6 @@ func TestDestination_Configure(t *testing.T) {
 				cfg: map[string]string{
 					config.KeyConnection: "sqlserver://sa:passwordx@0.0.0.0?database=mydb&connection+timeout=30",
 					config.KeyTable:      "CLIENTS",
-					config.KeyPrimaryKey: "ID",
 				},
 			},
 			wantErr: false,
@@ -56,8 +55,7 @@ func TestDestination_Configure(t *testing.T) {
 			name: "fail, missing connection",
 			args: args{
 				cfg: map[string]string{
-					config.KeyTable:      "CLIENTS",
-					config.KeyPrimaryKey: "ID",
+					config.KeyTable: "CLIENTS",
 				},
 			},
 			wantErr: true,
@@ -67,17 +65,6 @@ func TestDestination_Configure(t *testing.T) {
 			args: args{
 				cfg: map[string]string{
 					config.KeyConnection: "sqlserver://sa:passwordx@0.0.0.0?database=mydb&connection+timeout=30",
-					config.KeyPrimaryKey: "ID",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "fail, missed primary key",
-			args: args{
-				cfg: map[string]string{
-					config.KeyConnection: "sqlserver://sa:passwordx@0.0.0.0?database=mydb&connection+timeout=30",
-					config.KeyTable:      "CLIENTS",
 				},
 			},
 			wantErr: true,
