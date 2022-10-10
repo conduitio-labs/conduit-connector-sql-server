@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc.
+// Copyright © 2022 Meroxa, Inc & Yalantis.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package columntypes
 
 import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
-	sqlserver "github.com/conduitio-labs/conduit-connector-sql-server"
+	"errors"
 )
 
-func main() {
-	sdk.Serve(sqlserver.Connector)
-}
+var (
+	ErrValueIsNotAString = errors.New("value is not a string")
+	ErrInvalidTimeLayout = errors.New("invalid time layout")
+)

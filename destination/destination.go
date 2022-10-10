@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc.
+// Copyright © 2022 Meroxa, Inc & Yalantis.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,15 @@ package destination
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
+	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
+
 	"github.com/conduitio-labs/conduit-connector-sql-server/config"
+	"github.com/conduitio-labs/conduit-connector-sql-server/destination/writer"
 )
 
 // Destination SQL Server Connector persists records to a sql server database.
@@ -49,12 +53,6 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 			Required:    true,
 			Default:     "",
 		},
-		config.KeyPrimaryKey: {
-			Description: "A column name that used to detect if the target table" +
-				" already contains the record (destination).",
-			Required: true,
-			Default:  "",
-		},
 	}
 }
 
@@ -72,11 +70,41 @@ func (d *Destination) Configure(ctx context.Context, cfg map[string]string) erro
 
 // Open makes sure everything is prepared to receive records.
 func (d *Destination) Open(ctx context.Context) error {
+	db, err := sql.Open("mssql", d.config.Connection)
+	if err != nil {
+		return fmt.Errorf("connect to sql server: %w", err)
+	}
+
+	if err = db.PingContext(ctx); err != nil {
+		return fmt.Errorf("ping sql server: %w", err)
+	}
+
+	d.writer, err = writer.NewWriter(ctx, writer.Params{
+		DB:    db,
+		Table: d.config.Table,
+	})
+
+	if err != nil {
+		return fmt.Errorf("new writer: %w", err)
+	}
+
 	return nil
 }
 
 // Write writes a record into a Destination.
 func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, error) {
+	for i, record := range records {
+		err := sdk.Util.Destination.Route(ctx, record,
+			d.writer.Insert,
+			d.writer.Update,
+			d.writer.Delete,
+			d.writer.Insert,
+		)
+		if err != nil {
+			return i, fmt.Errorf("route %s: %w", record.Operation.String(), err)
+		}
+	}
+
 	return len(records), nil
 }
 

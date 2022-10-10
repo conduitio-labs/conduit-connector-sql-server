@@ -12,18 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package destination
+package writer
 
-import (
-	"context"
+import "errors"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+var (
+	// ErrEmptyPayload occurs when there's no payload to insert.
+	ErrEmptyPayload = errors.New("payload is empty")
+	// ErrEmptyKey occurs when there is no value for key.
+	ErrEmptyKey = errors.New("key value must be provided")
 )
-
-// Writer defines a writer interface needed for the Destination.
-type Writer interface {
-	Delete(ctx context.Context, record sdk.Record) error
-	Insert(ctx context.Context, record sdk.Record) error
-	Update(ctx context.Context, record sdk.Record) error
-	Close(ctx context.Context) error
-}

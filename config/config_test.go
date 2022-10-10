@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc.
+// Copyright © 2022 Meroxa, Inc & Yalantis.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,13 +37,11 @@ func TestParse(t *testing.T) {
 				cfg: map[string]string{
 					KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
 					KeyTable:      "CLIENTS",
-					KeyPrimaryKey: "ID",
 				},
 			},
 			want: Config{
 				Connection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
 				Table:      "CLIENTS",
-				Key:        "ID",
 			},
 			wantErr: false,
 		},
@@ -53,7 +51,6 @@ func TestParse(t *testing.T) {
 				cfg: map[string]string{
 					KeyConnection: "",
 					KeyTable:      "CLIENTS",
-					KeyPrimaryKey: "ID",
 				},
 			},
 			want:    Config{},
@@ -65,19 +62,6 @@ func TestParse(t *testing.T) {
 				cfg: map[string]string{
 					KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
 					KeyTable:      "",
-					KeyPrimaryKey: "ID",
-				},
-			},
-			want:    Config{},
-			wantErr: true,
-		},
-		{
-			name: "fail, missed key",
-			args: args{
-				cfg: map[string]string{
-					KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
-					KeyTable:      "CLIENTS",
-					KeyPrimaryKey: "",
 				},
 			},
 			want:    Config{},
@@ -90,7 +74,6 @@ func TestParse(t *testing.T) {
 					KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
 					KeyTable: "somerealyrealyrealyorunrealynamewithalotcharactersandsomesymbolsbutwithsomesenceor" +
 						"notanywayitismustbesomecharactersheretocheckthistestwithlongtablename",
-					KeyPrimaryKey: "ID",
 				},
 			},
 			want:    Config{},
