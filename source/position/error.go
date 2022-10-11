@@ -12,17 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sqlserver
+package position
 
 import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
-	"github.com/conduitio-labs/conduit-connector-sql-server/destination"
-	"github.com/conduitio-labs/conduit-connector-sql-server/source"
+	"errors"
 )
 
-var Connector = sdk.Connector{
-	NewSpecification: Specification,
-	NewSource:        source.New,
-	NewDestination:   destination.New,
-}
+var (
+	ErrUnknownIteratorType = errors.New("unknown iterator type")
+)

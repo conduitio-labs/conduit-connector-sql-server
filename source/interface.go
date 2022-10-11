@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sqlserver
+package source
 
 import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"context"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/destination"
-	"github.com/conduitio-labs/conduit-connector-sql-server/source"
+	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-var Connector = sdk.Connector{
-	NewSpecification: Specification,
-	NewSource:        source.New,
-	NewDestination:   destination.New,
+// Iterator interface.
+type Iterator interface {
+	HasNext(ctx context.Context) (bool, error)
+	Next(ctx context.Context) (sdk.Record, error)
+	Stop() error
+	Ack(ctx context.Context, rp sdk.Position) error
 }

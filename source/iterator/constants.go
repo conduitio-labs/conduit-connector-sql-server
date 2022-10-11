@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sqlserver
+package iterator
 
-import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
+const (
+	// metadata related.
+	metadataTable = "sqlserver.table"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/destination"
-	"github.com/conduitio-labs/conduit-connector-sql-server/source"
+	// operation types.
+	operationTypeInsert = "INSERT"
+	operationTypeUpdate = "UPDATE"
+	operationTypeDelete = "DELETE"
 )
-
-var Connector = sdk.Connector{
-	NewSpecification: Specification,
-	NewSource:        source.New,
-	NewDestination:   destination.New,
-}
