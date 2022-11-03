@@ -28,7 +28,7 @@ func TestParseSDKPosition(t *testing.T) {
 		IteratorType:             TypeSnapshot,
 		SnapshotLastProcessedVal: 1,
 		SnapshotMaxValue:         4,
-		CDCLastID:                0,
+		CDCID:                    0,
 		Time: time.Date(
 			2009, 11, 17, 20, 34, 58, 651387237, time.UTC),
 	}
@@ -37,7 +37,7 @@ func TestParseSDKPosition(t *testing.T) {
 		IteratorType:             "i",
 		SnapshotLastProcessedVal: 1,
 		SnapshotMaxValue:         4,
-		CDCLastID:                0,
+		CDCID:                    0,
 	}
 
 	snapshotPosBytes, _ := json.Marshal(snapshotPos)

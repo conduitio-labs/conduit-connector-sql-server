@@ -28,8 +28,8 @@ const (
 
 	queryAddODateTimeColumn = `ALTER TABLE %s ADD %s datetime default getDate()`
 
-	queryAddGUIDColumn = `ALTER TABLE %s ADD 
-                             %s UNIQUEIDENTIFIER CONSTRAINT conduit_id_%s PRIMARY KEY DEFAULT NewId()`
+	queryAddIDColumn = `ALTER TABLE %s ADD 
+                             %s BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY`
 
 	triggerTemplate = `
 		CREATE TRIGGER %s 

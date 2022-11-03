@@ -42,9 +42,8 @@ type Position struct {
 	SnapshotMaxValue any
 
 	// CDC information.
-	// CDCID - last processed id from tracking table.
-	CDCLastID int
-
+	// Last processed id.
+	CDCID int64
 	// Time Created time.
 	Time time.Time
 }
