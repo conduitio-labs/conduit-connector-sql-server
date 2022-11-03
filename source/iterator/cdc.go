@@ -45,6 +45,15 @@ type CDCIterator struct {
 	batchSize int
 	// position last recorded position.
 	position *position.Position
+
+	// trackingIDsCh - ids for removing.
+	trackingIDsCh chan int64
+	// stopCh for graceful shutdown.
+	stopCh chan struct{}
+	// finishClearCh for check if clearing was finished.
+	finishClearCh chan struct{}
+	// errCh for errors.
+	errCh chan error
 }
 
 // NewCDCIterator create new cdc iterator.
@@ -64,7 +73,17 @@ func NewCDCIterator(
 		key:           key,
 		batchSize:     batchSize,
 		position:      position,
+		trackingIDsCh: make(chan int64, 100),
+		stopCh:        make(chan struct{}, 1),
+		finishClearCh: make(chan struct{}, 1),
+		errCh:         make(chan error, 1),
 	}
+
+	if err := cdcIterator.loadRows(ctx); err != nil {
+		return nil, fmt.Errorf("load rows: %w", err)
+	}
+
+	go cdcIterator.ClearTrackingTable(ctx)
 
 	return cdcIterator, nil
 }
@@ -145,7 +164,7 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 }
 
 // Stop shutdown iterator.
-func (i *CDCIterator) Stop() error {
+func (i *CDCIterator) Stop(ctx context.Context) error {
 	if i.rows != nil {
 		err := i.rows.Close()
 		if err != nil {
@@ -153,6 +172,24 @@ func (i *CDCIterator) Stop() error {
 		}
 	}
 
+	i.stopCh <- struct{}{}
+
+	select {
+	case <-i.finishClearCh:
+		sdk.Logger(ctx).Debug().Msg("stopped clearing table")
+	case <-time.After(30 * time.Second):
+		sdk.Logger(ctx).Warn().Msg("worked timeout")
+	}
+
+	// close channels
+	close(i.trackingIDsCh)
+	close(i.stopCh)
+	close(i.finishClearCh)
+	close(i.errCh)
+
+	sdk.Logger(ctx).Debug().Msg("closed channels")
+
+	// close db
 	if i.db != nil {
 		return i.db.Close()
 	}
@@ -162,6 +199,14 @@ func (i *CDCIterator) Stop() error {
 
 // Ack check if record with position was recorded.
 func (i *CDCIterator) Ack(ctx context.Context, pos *position.Position) error {
+	if len(i.errCh) > 0 {
+		for v := range i.errCh {
+			return fmt.Errorf("clear tracking table: %w", v)
+		}
+	}
+
+	i.trackingIDsCh <- pos.CDCID
+
 	return nil
 }
 
@@ -198,6 +243,84 @@ func (i *CDCIterator) loadRows(ctx context.Context) error {
 	}
 
 	i.rows = rows
+
+	return nil
+}
+
+// ClearTrackingTable remove recorded rows from tracking table.
+func (i *CDCIterator) ClearTrackingTable(ctx context.Context) {
+	var ids []any
+
+	for {
+		select {
+		case id := <-i.trackingIDsCh:
+			if ids == nil {
+				ids = make([]any, 0)
+			}
+
+			ids = append(ids, id)
+			if len(ids) >= idsClearingBufferSize {
+				err := i.DeleteRows(ctx, ids)
+				if err != nil {
+					i.errCh <- fmt.Errorf("delete rows: %w", err)
+
+					return
+				}
+
+				ids = nil
+			}
+
+		case <-time.After(clearingDuration * time.Second):
+			err := i.DeleteRows(ctx, ids)
+			if err != nil {
+				i.errCh <- fmt.Errorf("delete rows: %w", err)
+
+				return
+			}
+
+			ids = nil
+
+		case <-i.stopCh:
+			err := i.DeleteRows(ctx, ids)
+			if err != nil {
+				i.errCh <- fmt.Errorf("delete rows: %w", err)
+			}
+
+			i.finishClearCh <- struct{}{}
+
+			return
+		}
+	}
+}
+
+func (i *CDCIterator) DeleteRows(ctx context.Context, ids []any) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	tx, err := i.db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+
+	defer tx.Rollback() // nolint:errcheck,nolintlint
+
+	deleteBuilder := sqlbuilder.NewDeleteBuilder()
+
+	q, args := deleteBuilder.
+		DeleteFrom(i.trackingTable).
+		Where(deleteBuilder.In(columnTrackingID, ids...)).
+		Build()
+
+	_, err = tx.ExecContext(ctx, q, args...)
+	if err != nil {
+		return fmt.Errorf("execute delete query: %w", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("commit tx: %w", err)
+	}
 
 	return nil
 }

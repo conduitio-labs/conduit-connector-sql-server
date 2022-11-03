@@ -102,7 +102,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	s.iterator, err = iterator.NewCombinedIterator(ctx, db, s.config.Connection, s.config.Table, s.config.Key,
 		s.config.OrderingColumn, s.config.Columns, s.config.BatchSize, rp)
 	if err != nil {
-		return fmt.Errorf("create combined iterator")
+		return fmt.Errorf("create combined iterator: %w", err)
 	}
 
 	return nil
@@ -130,7 +130,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 // Teardown gracefully shutdown connector.
 func (s *Source) Teardown(ctx context.Context) error {
 	if s.iterator != nil {
-		err := s.iterator.Stop()
+		err := s.iterator.Stop(ctx)
 		if err != nil {
 			return err
 		}

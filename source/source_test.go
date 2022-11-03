@@ -182,7 +182,7 @@ func TestSource_Teardown(t *testing.T) {
 		ctx := context.Background()
 
 		it := mock.NewMockIterator(ctrl)
-		it.EXPECT().Stop().Return(nil)
+		it.EXPECT().Stop(ctx).Return(nil)
 
 		s := Source{
 			iterator: it,
@@ -198,7 +198,7 @@ func TestSource_Teardown(t *testing.T) {
 		ctx := context.Background()
 
 		it := mock.NewMockIterator(ctrl)
-		it.EXPECT().Stop().Return(errors.New("some error"))
+		it.EXPECT().Stop(ctx).Return(errors.New("some error"))
 
 		s := Source{
 			iterator: it,

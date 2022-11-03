@@ -59,13 +59,13 @@ func Parse(cfg map[string]string) (Config, error) {
 
 	sourceConfig := Config{
 		Config:         common,
-		OrderingColumn: strings.ToUpper(cfg[KeyOrderingColumn]),
+		OrderingColumn: cfg[KeyOrderingColumn],
 		BatchSize:      defaultBatchSize,
-		Key:            strings.ToUpper(cfg[KeyPrimaryKey]),
+		Key:            cfg[KeyPrimaryKey],
 	}
 
 	if columns := cfg[KeyColumns]; columns != "" {
-		sourceConfig.Columns = strings.Split(strings.ToUpper(strings.TrimSpace(columns)), ",")
+		sourceConfig.Columns = strings.Split(columns, ",")
 	}
 
 	if batchSize := cfg[KeyBatchSize]; batchSize != "" {
