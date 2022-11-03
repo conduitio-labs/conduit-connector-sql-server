@@ -22,4 +22,10 @@ const (
 	operationTypeInsert = "INSERT"
 	operationTypeUpdate = "UPDATE"
 	operationTypeDelete = "DELETE"
+
+	// clearing buffer size.
+	idsClearingBufferSize = 50
+
+	// period after iterator clears table (seconds).
+	clearingDuration = 5
 )

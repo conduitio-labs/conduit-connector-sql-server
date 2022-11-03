@@ -150,7 +150,7 @@ func (i *SnapshotIterator) Next(ctx context.Context) (sdk.Record, error) {
 }
 
 // Stop shutdown iterator.
-func (i *SnapshotIterator) Stop() error {
+func (i *SnapshotIterator) Stop(ctx context.Context) error {
 	if i.rows != nil {
 		err := i.rows.Close()
 		if err != nil {

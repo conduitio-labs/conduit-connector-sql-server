@@ -258,20 +258,24 @@ func (c *CombinedIterator) Next(ctx context.Context) (sdk.Record, error) {
 }
 
 // Stop the underlying iterators.
-func (c *CombinedIterator) Stop() error {
+func (c *CombinedIterator) Stop(ctx context.Context) error {
 	if c.snapshot != nil {
-		return c.snapshot.Stop()
+		return c.snapshot.Stop(ctx)
 	}
 
 	if c.cdc != nil {
-		return c.cdc.Stop()
+		return c.cdc.Stop(ctx)
 	}
 
 	return nil
 }
 
-// Ack check if record with position was recorded.
+// Ack collect tracking ids for removing.
 func (c *CombinedIterator) Ack(ctx context.Context, rp sdk.Position) error {
+	if c.cdc == nil {
+		return nil
+	}
+
 	pos, err := position.ParseSDKPosition(rp)
 	if err != nil {
 		return fmt.Errorf("parse position: %w", err)
@@ -287,7 +291,7 @@ func (c *CombinedIterator) Ack(ctx context.Context, rp sdk.Position) error {
 func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
 	var err error
 
-	err = c.snapshot.Stop()
+	err = c.snapshot.Stop(ctx)
 	if err != nil {
 		return fmt.Errorf("stop snaphot iterator: %w", err)
 	}
