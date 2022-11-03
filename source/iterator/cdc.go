@@ -16,46 +16,23 @@ package iterator
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"time"
 
+	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
 )
 
-// trackingTableService service for clearing tracking table.
-type trackingTableService struct {
-	// channel for getting stop signal.
-	stopCh chan struct{}
-	// channel for errors.
-	errCh chan error
-	// channel for notify that all queries finished and db can be closed.
-	canCloseCh chan struct{}
-	// idsForRemoving - ids of rows what need to clear.
-	idsForRemoving []any
-}
-
-func newTrackingTableService() *trackingTableService {
-	stopCh := make(chan struct{}, 1)
-	canCloseCh := make(chan struct{}, 1)
-	errCh := make(chan error, 1)
-	trackingIDsForRemoving := make([]any, 0)
-
-	return &trackingTableService{
-		stopCh:         stopCh,
-		errCh:          errCh,
-		idsForRemoving: trackingIDsForRemoving,
-		canCloseCh:     canCloseCh,
-	}
-}
-
 // CDCIterator - cdc iterator.
 type CDCIterator struct {
-	db *sqlx.DB
+	db   *sqlx.DB
+	rows *sqlx.Rows
 
-	// tableSrv service for clearing tracking table.
-	tableSrv *trackingTableService
-
-	// table - table name.
+	// table name.
 	table string
 	// trackingTable - tracking table name.
 	trackingTable string
@@ -74,7 +51,7 @@ type CDCIterator struct {
 func NewCDCIterator(
 	ctx context.Context,
 	db *sqlx.DB,
-	table string, trackingTable, key string,
+	table, trackingTable, key string,
 	columns []string,
 	batchSize int,
 	position *position.Position,
@@ -87,8 +64,140 @@ func NewCDCIterator(
 		key:           key,
 		batchSize:     batchSize,
 		position:      position,
-		tableSrv:      newTrackingTableService(),
 	}
 
 	return cdcIterator, nil
+}
+
+// HasNext check ability to get next record.
+func (i *CDCIterator) HasNext(ctx context.Context) (bool, error) {
+	if i.rows != nil && i.rows.Next() {
+		return true, nil
+	}
+
+	if err := i.loadRows(ctx); err != nil {
+		return false, fmt.Errorf("load rows: %w", err)
+	}
+
+	return false, nil
+}
+
+// Next get new record.
+func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
+	row := make(map[string]any)
+	if err := i.rows.MapScan(row); err != nil {
+		return sdk.Record{}, fmt.Errorf("scan rows: %w", err)
+	}
+
+	id, ok := row[columnTrackingID].(int64)
+	if !ok {
+		return sdk.Record{}, ErrWrongTrackingIDType
+	}
+
+	operationType, ok := row[columnOperationType].(string)
+	if !ok {
+		return sdk.Record{}, ErrWrongTrackingIDType
+	}
+
+	pos := position.Position{
+		IteratorType: position.TypeCDC,
+		CDCID:        id,
+		Time:         time.Now(),
+	}
+
+	convertedPosition, err := pos.ConvertToSDKPosition()
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("convert position %w", err)
+	}
+
+	if _, ok = row[i.key]; !ok {
+		return sdk.Record{}, ErrKeyIsNotExist
+	}
+
+	// delete tracking columns
+	delete(row, columnOperationType)
+	delete(row, columnTrackingID)
+	delete(row, columnTimeCreated)
+
+	transformedRowBytes, err := json.Marshal(row)
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("marshal row: %w", err)
+	}
+
+	i.position = &pos
+
+	metadata := sdk.Metadata(map[string]string{metadataTable: i.table})
+	metadata.SetCreatedAt(time.Now())
+
+	switch operationType {
+	case operationTypeInsert:
+		return sdk.Util.Source.NewRecordCreate(convertedPosition, metadata,
+			sdk.StructuredData{i.key: row[i.key]}, sdk.RawData(transformedRowBytes)), nil
+	case operationTypeUpdate:
+		return sdk.Util.Source.NewRecordUpdate(convertedPosition, metadata,
+			sdk.StructuredData{i.key: row[i.key]}, nil, sdk.RawData(transformedRowBytes)), nil
+	case operationTypeDelete:
+		return sdk.Util.Source.NewRecordDelete(convertedPosition, metadata,
+			sdk.StructuredData{i.key: row[i.key]}), nil
+	default:
+		return sdk.Record{}, ErrUnknownOperatorType
+	}
+}
+
+// Stop shutdown iterator.
+func (i *CDCIterator) Stop() error {
+	if i.rows != nil {
+		err := i.rows.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	if i.db != nil {
+		return i.db.Close()
+	}
+
+	return nil
+}
+
+// Ack check if record with position was recorded.
+func (i *CDCIterator) Ack(ctx context.Context, pos *position.Position) error {
+	return nil
+}
+
+// LoadRows selects a batch of rows from a database, based on the
+// table, columns, orderingColumn, batchSize and the current position.
+func (i *CDCIterator) loadRows(ctx context.Context) error {
+	selectBuilder := sqlbuilder.NewSelectBuilder()
+
+	if len(i.columns) > 0 {
+		// append additional columns
+		selectBuilder.Select(append(i.columns,
+			[]string{columnTrackingID, columnOperationType, columnTimeCreated}...)...)
+	} else {
+		selectBuilder.Select("*")
+	}
+
+	selectBuilder.From(i.trackingTable)
+
+	if i.position != nil {
+		selectBuilder.Where(
+			selectBuilder.GreaterThan(columnTrackingID, i.position.CDCID),
+		)
+	}
+
+	q, args := selectBuilder.
+		OrderBy(columnTrackingID).
+		Build()
+
+	q = fmt.Sprintf("%s OFFSET 0 ROWS FETCH FIRST %d ROWS ONLY", q, i.batchSize)
+
+	rows, err := i.db.QueryxContext(ctx, q, args...)
+	if err != nil {
+		return fmt.Errorf("execute select query: %w", err)
+	}
+
+	i.rows = rows
+
+	return nil
 }

@@ -111,7 +111,7 @@ func TestSource_Read(t *testing.T) {
 		pos, _ := json.Marshal(position.Position{
 			IteratorType:             position.TypeSnapshot,
 			SnapshotLastProcessedVal: "1",
-			CDCLastID:                0,
+			CDCID:                    0,
 			Time:                     time.Now(),
 		})
 

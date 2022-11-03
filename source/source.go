@@ -24,6 +24,7 @@ import (
 	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
 
 	"github.com/conduitio-labs/conduit-connector-sql-server/config"
+	"github.com/conduitio-labs/conduit-connector-sql-server/source/iterator"
 )
 
 // Source connector.
@@ -98,7 +99,12 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 		return fmt.Errorf("ping sql server: %w", err)
 	}
 
-	// TODO implement combined iterator
+	s.iterator, err = iterator.NewCombinedIterator(ctx, db, s.config.Connection, s.config.Table, s.config.Key,
+		s.config.OrderingColumn, s.config.Columns, s.config.BatchSize, rp)
+	if err != nil {
+		return fmt.Errorf("create combined iterator")
+	}
+
 	return nil
 }
 

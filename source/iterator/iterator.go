@@ -22,6 +22,8 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/jmoiron/sqlx"
 
+	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
+
 	"github.com/conduitio-labs/conduit-connector-sql-server/columntypes"
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
 )
@@ -108,7 +110,7 @@ func NewCombinedIterator(
 		it.cdc, err = NewCDCIterator(ctx, db, it.table, it.trackingTable, it.key,
 			it.columns, it.batchSize, pos)
 		if err != nil {
-			return nil, fmt.Errorf("new shapshot iterator: %w", err)
+			return nil, fmt.Errorf("new cdc iterator: %w", err)
 		}
 	}
 
@@ -164,7 +166,7 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 	}
 
 	// add id column.
-	_, err = tx.ExecContext(ctx, fmt.Sprintf(queryAddGUIDColumn, c.trackingTable, columnTrackingID, c.table))
+	_, err = tx.ExecContext(ctx, fmt.Sprintf(queryAddIDColumn, c.trackingTable, columnTrackingID))
 	if err != nil {
 		return fmt.Errorf("add id column: %w", err)
 	}
@@ -208,6 +210,99 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// HasNext returns a bool indicating whether the iterator has the next record to return or not.
+// If the underlying snapshot iterator returns false, the combined iterator will try to switch to the cdc iterator.
+func (c *CombinedIterator) HasNext(ctx context.Context) (bool, error) {
+	switch {
+	case c.snapshot != nil:
+		hasNext, err := c.snapshot.HasNext(ctx)
+		if err != nil {
+			return false, fmt.Errorf("snapshot has next: %w", err)
+		}
+
+		if !hasNext {
+			if er := c.switchToCDCIterator(ctx); er != nil {
+				return false, fmt.Errorf("switch to cdc iterator: %w", er)
+			}
+
+			return false, nil
+		}
+
+		return true, nil
+
+	case c.cdc != nil:
+		return c.cdc.HasNext(ctx)
+
+	default:
+		return false, nil
+	}
+}
+
+// Next returns the next record.
+func (c *CombinedIterator) Next(ctx context.Context) (sdk.Record, error) {
+	switch {
+	case c.snapshot != nil:
+		return c.snapshot.Next(ctx)
+
+	case c.cdc != nil:
+		return c.cdc.Next(ctx)
+
+	default:
+		return sdk.Record{}, ErrNoInitializedIterator
+	}
+}
+
+// Stop the underlying iterators.
+func (c *CombinedIterator) Stop() error {
+	if c.snapshot != nil {
+		return c.snapshot.Stop()
+	}
+
+	if c.cdc != nil {
+		return c.cdc.Stop()
+	}
+
+	return nil
+}
+
+// Ack check if record with position was recorded.
+func (c *CombinedIterator) Ack(ctx context.Context, rp sdk.Position) error {
+	pos, err := position.ParseSDKPosition(rp)
+	if err != nil {
+		return fmt.Errorf("parse position: %w", err)
+	}
+
+	if pos.IteratorType == position.TypeCDC {
+		return c.cdc.Ack(ctx, pos)
+	}
+
+	return nil
+}
+
+func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
+	var err error
+
+	err = c.snapshot.Stop()
+	if err != nil {
+		return fmt.Errorf("stop snaphot iterator: %w", err)
+	}
+
+	c.snapshot = nil
+
+	db, err := sqlx.Open("mssql", c.conn)
+	if err != nil {
+		return err
+	}
+
+	c.cdc, err = NewCDCIterator(ctx, db, c.table, c.trackingTable, c.key,
+		c.columns, c.batchSize, nil)
+	if err != nil {
+		return fmt.Errorf("new cdc iterator: %w", err)
 	}
 
 	return nil
