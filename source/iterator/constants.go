@@ -15,6 +15,13 @@
 package iterator
 
 const (
+	trackingTablePattern = "CONDUIT_TRACKING_%s"
+
+	// tracking table columns.
+	columnOperationType = "CONDUIT_OPERATION_TYPE"
+	columnTimeCreated   = "CONDUIT_TRACKING_CREATED_DATE"
+	columnTrackingID    = "CONDUIT_TRACKING_ID"
+
 	// metadata related.
 	metadataTable = "sqlserver.table"
 

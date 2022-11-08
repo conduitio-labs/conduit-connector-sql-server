@@ -32,7 +32,7 @@ type Config struct {
 	// Connection string connection to SQL Server database.
 	Connection string `validate:"required"`
 	// Table is a name of the table that the connector should write to or read from.
-	Table string `validate:"required,max=128"`
+	Table string `validate:"required,max=111"`
 }
 
 // Parse attempts to parse a provided map[string]string into a Config struct.

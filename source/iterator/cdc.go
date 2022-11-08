@@ -24,6 +24,7 @@ import (
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/conduitio-labs/conduit-connector-sql-server/columntypes"
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
 )
 
@@ -45,7 +46,8 @@ type CDCIterator struct {
 	batchSize int
 	// position last recorded position.
 	position *position.Position
-
+	// columnTypes - column name with type.
+	columnTypes map[string]string
 	// trackingIDsCh - ids for removing.
 	trackingIDsCh chan int64
 	// stopCh for graceful shutdown.
@@ -64,6 +66,7 @@ func NewCDCIterator(
 	columns []string,
 	batchSize int,
 	position *position.Position,
+	columnTypes map[string]string,
 ) (*CDCIterator, error) {
 	cdcIterator := &CDCIterator{
 		db:            db,
@@ -73,6 +76,7 @@ func NewCDCIterator(
 		key:           key,
 		batchSize:     batchSize,
 		position:      position,
+		columnTypes:   columnTypes,
 		trackingIDsCh: make(chan int64, 100),
 		stopCh:        make(chan struct{}, 1),
 		finishClearCh: make(chan struct{}, 1),
@@ -108,12 +112,17 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("scan rows: %w", err)
 	}
 
-	id, ok := row[columnTrackingID].(int64)
+	transformRow, err := columntypes.TransformRow(ctx, row, i.columnTypes)
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("transform row: %w", err)
+	}
+
+	id, ok := transformRow[columnTrackingID].(int64)
 	if !ok {
 		return sdk.Record{}, ErrWrongTrackingIDType
 	}
 
-	operationType, ok := row[columnOperationType].(string)
+	operationType, ok := transformRow[columnOperationType].(string)
 	if !ok {
 		return sdk.Record{}, ErrWrongTrackingIDType
 	}
@@ -129,16 +138,16 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("convert position %w", err)
 	}
 
-	if _, ok = row[i.key]; !ok {
+	if _, ok = transformRow[i.key]; !ok {
 		return sdk.Record{}, ErrKeyIsNotExist
 	}
 
 	// delete tracking columns
-	delete(row, columnOperationType)
-	delete(row, columnTrackingID)
-	delete(row, columnTimeCreated)
+	delete(transformRow, columnOperationType)
+	delete(transformRow, columnTrackingID)
+	delete(transformRow, columnTimeCreated)
 
-	transformedRowBytes, err := json.Marshal(row)
+	transformedRowBytes, err := json.Marshal(transformRow)
 	if err != nil {
 		return sdk.Record{}, fmt.Errorf("marshal row: %w", err)
 	}
@@ -151,13 +160,13 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	switch operationType {
 	case operationTypeInsert:
 		return sdk.Util.Source.NewRecordCreate(convertedPosition, metadata,
-			sdk.StructuredData{i.key: row[i.key]}, sdk.RawData(transformedRowBytes)), nil
+			sdk.StructuredData{i.key: transformRow[i.key]}, sdk.RawData(transformedRowBytes)), nil
 	case operationTypeUpdate:
 		return sdk.Util.Source.NewRecordUpdate(convertedPosition, metadata,
-			sdk.StructuredData{i.key: row[i.key]}, nil, sdk.RawData(transformedRowBytes)), nil
+			sdk.StructuredData{i.key: transformRow[i.key]}, nil, sdk.RawData(transformedRowBytes)), nil
 	case operationTypeDelete:
 		return sdk.Util.Source.NewRecordDelete(convertedPosition, metadata,
-			sdk.StructuredData{i.key: row[i.key]}), nil
+			sdk.StructuredData{i.key: transformRow[i.key]}), nil
 	default:
 		return sdk.Record{}, ErrUnknownOperatorType
 	}

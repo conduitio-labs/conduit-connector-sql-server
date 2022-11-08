@@ -85,9 +85,9 @@ func TestParse(t *testing.T) {
 				cfg: map[string]string{
 					config.KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
 					config.KeyTable:      "CLIENTS",
-					KeyPrimaryKey:        "id",
-					KeyColumns:           "id,name",
-					KeyOrderingColumn:    "id",
+					KeyPrimaryKey:        "ID",
+					KeyColumns:           "ID,NAME",
+					KeyOrderingColumn:    "ID",
 					KeyBatchSize:         "50",
 				},
 			},

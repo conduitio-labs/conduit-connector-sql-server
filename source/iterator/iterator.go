@@ -28,15 +28,6 @@ import (
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
 )
 
-const (
-	trackingTablePattern = "CONDUIT_TRACKING_%s"
-
-	// tracking table columns.
-	columnOperationType = "CONDUIT_OPERATION_TYPE"
-	columnTimeCreated   = "CONDUIT_TRACKING_CREATED_DATE"
-	columnTrackingID    = "CONDUIT_TRACKING_ID"
-)
-
 // CombinedIterator combined iterator.
 type CombinedIterator struct {
 	cdc      *CDCIterator
@@ -77,11 +68,18 @@ func NewCombinedIterator(
 		conn:           conn,
 		table:          table,
 		columns:        columns,
-		key:            key,
 		orderingColumn: orderingColumn,
 		batchSize:      batchSize,
 		trackingTable:  fmt.Sprintf(trackingTablePattern, table),
 	}
+
+	// set key field.
+	err = it.setKey(ctx, db, key)
+	if err != nil {
+		return nil, fmt.Errorf("set key: %w", err)
+	}
+
+	it.checkColumnsField()
 
 	// get column types for converting.
 	it.columnTypes, err = columntypes.GetColumnTypes(ctx, db, table)
@@ -101,14 +99,14 @@ func NewCombinedIterator(
 	}
 
 	if pos == nil || pos.IteratorType == position.TypeSnapshot {
-		it.snapshot, err = NewSnapshotIterator(ctx, db, table, orderingColumn, key, columns,
-			batchSize, pos, it.columnTypes)
+		it.snapshot, err = NewSnapshotIterator(ctx, db, it.table, it.orderingColumn, it.key, it.columns,
+			it.batchSize, pos, it.columnTypes)
 		if err != nil {
 			return nil, fmt.Errorf("new shapshot iterator: %w", err)
 		}
 	} else {
 		it.cdc, err = NewCDCIterator(ctx, db, it.table, it.trackingTable, it.key,
-			it.columns, it.batchSize, pos)
+			it.columns, it.batchSize, pos, it.columnTypes)
 		if err != nil {
 			return nil, fmt.Errorf("new cdc iterator: %w", err)
 		}
@@ -173,7 +171,15 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 
 	columnNames := make([]string, 0)
 
-	for key := range c.columnTypes {
+	for key, val := range c.columnTypes {
+		// sql-server doesn't support text, ntext, image column types inside triggers.
+		// example of error:
+		// mssql: Cannot use text, ntext, or image columns in the 'inserted' and 'deleted' tables.
+		// connector excludes these columns.
+		if val == columntypes.TextType || val == columntypes.NtextType || val == columntypes.ImageType {
+			continue
+		}
+
 		columnNames = append(columnNames, key)
 	}
 
@@ -288,6 +294,7 @@ func (c *CombinedIterator) Ack(ctx context.Context, rp sdk.Position) error {
 	return nil
 }
 
+// switchToCDCIterator close snapshot iterator and run cdc iterator.
 func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
 	var err error
 
@@ -304,12 +311,73 @@ func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
 	}
 
 	c.cdc, err = NewCDCIterator(ctx, db, c.table, c.trackingTable, c.key,
-		c.columns, c.batchSize, nil)
+		c.columns, c.batchSize, nil, c.columnTypes)
 	if err != nil {
 		return fmt.Errorf("new cdc iterator: %w", err)
 	}
 
 	return nil
+}
+
+// getPrimaryKeyField - get info about primary key field.
+func (c *CombinedIterator) getPrimaryKeyFieldFromTable(ctx context.Context, db *sqlx.DB, table string) (string, error) {
+	rows, err := db.QueryxContext(ctx, fmt.Sprintf(queryGetPrimaryKey, table, table))
+	if err != nil {
+		return "", fmt.Errorf("get primary key: %w", err)
+	}
+
+	var field string
+
+	for rows.Next() {
+		err = rows.Scan(&field)
+		if err != nil {
+			return "", fmt.Errorf("scan rows: %w", err)
+		}
+	}
+
+	return field, nil
+}
+
+// setKey - set key field by priority:
+// 1. Key from config.
+// 2. Primary key from table.
+// 3. Ordering column.
+func (c *CombinedIterator) setKey(ctx context.Context, db *sqlx.DB, keyFromConfig string) error {
+	if keyFromConfig != "" {
+		c.key = keyFromConfig
+
+		return nil
+	}
+
+	key, err := c.getPrimaryKeyFieldFromTable(ctx, db, c.table)
+	if err != nil {
+		return fmt.Errorf("get primary key from table: %w", err)
+	}
+
+	if key != "" {
+		c.key = key
+
+		return nil
+	}
+
+	c.key = c.orderingColumn
+
+	return nil
+}
+
+// checkColumnsField check if key exist in custom columns, and if not add it.
+func (c *CombinedIterator) checkColumnsField() {
+	if c.columns == nil {
+		return
+	}
+
+	for i := range c.columns {
+		if c.columns[i] == c.key {
+			return
+		}
+	}
+
+	c.columns = append(c.columns, c.key)
 }
 
 func getTriggerName(operation, table string) string {

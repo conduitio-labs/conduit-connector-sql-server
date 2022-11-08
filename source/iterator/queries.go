@@ -45,4 +45,22 @@ const (
 			%s
 		END
 `
+	queryGetPrimaryKey = `
+	SELECT 
+	  column_name 
+	FROM 
+	  INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+	WHERE 
+	  TABLE_NAME = '%s' 
+	  AND CONSTRAINT_NAME = (
+		SELECT 
+		  CONSTRAINT_NAME 
+		FROM 
+		  INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+		WHERE 
+		  CONSTRAINT_TYPE = 'PRIMARY KEY' 
+		  AND TABLE_NAME = '%s'
+	  )
+
+`
 )

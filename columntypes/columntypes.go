@@ -28,17 +28,25 @@ import (
 
 const (
 	// sql server date, time column types.
-	dateType       = "date"
-	datetime2      = "datetime2"
-	datetime       = "datetime"
-	datetimeOffset = "datetimeoffset"
-	smallDatetime  = "smalldatetime"
-	timeType       = "time"
+	dateType           = "date"
+	datetime2Type      = "datetime2Type"
+	datetimeType       = "datetimeType"
+	datetimeOffsetType = "datetimeoffset"
+	smallDateTimeType  = "smalldatetime"
+	timeType           = "time"
 
-	// sql server binary types.
-	binary    = "binary"
-	varbinary = "varbinary"
-	image     = "image"
+	// sql server binaryType types.
+	binaryType    = "binaryType"
+	varbinaryType = "varbinaryType"
+	ImageType     = "ImageType"
+
+	// string types.
+	TextType  = "text"
+	NtextType = "ntext"
+
+	// numeric types.
+	decimalType = "decimal"
+	numericType = "numeric"
 )
 
 var (
@@ -58,6 +66,35 @@ var (
 // Querier is a database querier interface needed for the GetColumnTypes function.
 type Querier interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+}
+
+// TransformRow converts row map values to appropriate Go types, based on the columnTypes.
+func TransformRow(ctx context.Context, row map[string]any, columnTypes map[string]string) (map[string]any, error) {
+	result := make(map[string]any, len(row))
+
+	for key, value := range row {
+		if value == nil {
+			result[key] = value
+
+			continue
+		}
+
+		switch columnTypes[key] {
+		// Convert to string.
+		case numericType, decimalType:
+			valueBytes, ok := value.([]byte)
+			if !ok {
+				return nil, ErrValueIsNotBytes
+			}
+
+			result[key] = string(valueBytes)
+
+		default:
+			result[key] = value
+		}
+	}
+
+	return result, nil
 }
 
 // ConvertStructureData converts a sdk.StructureData values to a proper database types.
@@ -91,7 +128,7 @@ func ConvertStructureData(
 
 		// Converting value to time if it is string.
 		switch columnTypes[strings.ToLower(key)] {
-		case dateType, timeType, datetime2, datetime, datetimeOffset, smallDatetime:
+		case dateType, timeType, datetime2Type, datetimeType, datetimeOffsetType, smallDateTimeType:
 			_, ok := value.(time.Time)
 			if ok {
 				result[key] = value
@@ -110,7 +147,7 @@ func ConvertStructureData(
 			}
 
 			result[key] = timeValue
-		case binary, varbinary, image:
+		case binaryType, varbinaryType, ImageType:
 			_, ok := value.([]byte)
 			if ok {
 				result[key] = value
