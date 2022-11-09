@@ -24,6 +24,7 @@ import (
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/conduitio-labs/conduit-connector-sql-server/columntypes"
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
 )
 
@@ -115,13 +116,18 @@ func (i *SnapshotIterator) Next(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("scan rows: %w", err)
 	}
 
-	if _, ok := row[i.orderingColumn]; !ok {
+	transformRow, err := columntypes.TransformRow(ctx, row, i.columnTypes)
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("transform row: %w", err)
+	}
+
+	if _, ok := transformRow[i.orderingColumn]; !ok {
 		return sdk.Record{}, ErrOrderingColumnIsNotExist
 	}
 
 	pos := position.Position{
 		IteratorType:             position.TypeSnapshot,
-		SnapshotLastProcessedVal: row[i.orderingColumn],
+		SnapshotLastProcessedVal: transformRow[i.orderingColumn],
 		SnapshotMaxValue:         i.maxValue,
 		Time:                     time.Now(),
 	}
@@ -131,11 +137,11 @@ func (i *SnapshotIterator) Next(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("convert position %w", err)
 	}
 
-	if _, ok := row[i.key]; !ok {
+	if _, ok := transformRow[i.key]; !ok {
 		return sdk.Record{}, ErrKeyIsNotExist
 	}
 
-	transformedRowBytes, err := json.Marshal(row)
+	transformedRowBytes, err := json.Marshal(transformRow)
 	if err != nil {
 		return sdk.Record{}, fmt.Errorf("marshal row: %w", err)
 	}
@@ -146,7 +152,7 @@ func (i *SnapshotIterator) Next(ctx context.Context) (sdk.Record, error) {
 	metadata.SetCreatedAt(time.Now())
 
 	return sdk.Util.Source.NewRecordSnapshot(convertedPosition, metadata,
-		sdk.StructuredData{i.key: row[i.key]}, sdk.RawData(transformedRowBytes)), nil
+		sdk.StructuredData{i.key: transformRow[i.key]}, sdk.RawData(transformedRowBytes)), nil
 }
 
 // Stop shutdown iterator.

@@ -20,5 +20,6 @@ import (
 
 var (
 	ErrValueIsNotAString = errors.New("value is not a string")
+	ErrValueIsNotBytes   = errors.New("value is not bytes")
 	ErrInvalidTimeLayout = errors.New("invalid time layout")
 )
