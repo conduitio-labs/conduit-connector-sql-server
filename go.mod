@@ -3,6 +3,7 @@ module github.com/conduitio-labs/conduit-connector-sql-server
 go 1.18
 
 require (
+	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/conduitio/conduit-connector-sdk v0.3.0
 	github.com/denisenkom/go-mssqldb v0.12.2
 	github.com/go-playground/validator/v10 v10.11.1
