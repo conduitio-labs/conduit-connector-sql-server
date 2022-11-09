@@ -55,7 +55,7 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 		},
 		KeyPrimaryKey: {
 			Description: "A name of column that connector will use for create record key",
-			Required:    true,
+			Required:    false,
 			Default:     "",
 		},
 		KeyOrderingColumn: {
