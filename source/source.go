@@ -73,6 +73,11 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 			Required:    false,
 			Default:     "1000",
 		},
+		KeySnapshot: {
+			Description: "Whether or not the plugin will take a snapshot of the entire table before starting ",
+			Required:    false,
+			Default:     "true",
+		},
 	}
 }
 
@@ -100,7 +105,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	}
 
 	s.iterator, err = iterator.NewCombinedIterator(ctx, db, s.config.Connection, s.config.Table, s.config.Key,
-		s.config.OrderingColumn, s.config.Columns, s.config.BatchSize, rp)
+		s.config.OrderingColumn, s.config.Columns, s.config.BatchSize, s.config.Snapshot, rp)
 	if err != nil {
 		return fmt.Errorf("create combined iterator: %w", err)
 	}

@@ -32,6 +32,12 @@ const (
 	KeyBatchSize = "batchSize"
 	// KeyPrimaryKey is column name that records should use for their `Key` fields.
 	KeyPrimaryKey string = "primaryKey"
+	// KeySnapshot is a config name for snapshotMode.
+	KeySnapshot = "snapshot"
+
+	// snapshotDefault is a default value for the Snapshot field.
+	snapshotDefault = true
+
 	// defaultBatchSize is a default value for a BatchSize field.
 	defaultBatchSize = 1000
 )
@@ -48,6 +54,8 @@ type Config struct {
 	BatchSize int `key:"batchSize" validate:"gte=1,lte=100000"`
 	// Key - Column name that records should use for their `Key` fields.
 	Key string `validate:"max=128"`
+	// Snapshot whether or not the plugin will take a snapshot of the entire table before starting cdc.
+	Snapshot bool
 }
 
 // Parse maps the incoming map to the Config and validates it.
@@ -62,6 +70,7 @@ func Parse(cfg map[string]string) (Config, error) {
 		OrderingColumn: cfg[KeyOrderingColumn],
 		BatchSize:      defaultBatchSize,
 		Key:            cfg[KeyPrimaryKey],
+		Snapshot:       snapshotDefault,
 	}
 
 	if columns := cfg[KeyColumns]; columns != "" {
@@ -73,6 +82,15 @@ func Parse(cfg map[string]string) (Config, error) {
 		if err != nil {
 			return Config{}, fmt.Errorf("parse batchSize: %w", err)
 		}
+	}
+
+	if cfg[KeySnapshot] != "" {
+		snapshot, err := strconv.ParseBool(cfg[KeySnapshot])
+		if err != nil {
+			return Config{}, fmt.Errorf("parse %q: %w", KeySnapshot, err)
+		}
+
+		sourceConfig.Snapshot = snapshot
 	}
 
 	if err = validator.Validate(&sourceConfig); err != nil {

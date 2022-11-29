@@ -60,6 +60,7 @@ func NewCombinedIterator(
 	conn, table, key, orderingColumn string,
 	columns []string,
 	batchSize int,
+	snapshot bool,
 	sdkPosition sdk.Position,
 ) (*CombinedIterator, error) {
 	var err error
@@ -98,7 +99,7 @@ func NewCombinedIterator(
 		return nil, fmt.Errorf("parse position: %w", err)
 	}
 
-	if pos == nil || pos.IteratorType == position.TypeSnapshot {
+	if snapshot && (pos == nil || pos.IteratorType == position.TypeSnapshot) {
 		it.snapshot, err = NewSnapshotIterator(ctx, db, it.table, it.orderingColumn, it.key, it.columns,
 			it.batchSize, pos, it.columnTypes)
 		if err != nil {

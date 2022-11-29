@@ -45,16 +45,19 @@ and each detected change.
 
 ### Configuration options
 
-| Name                    | Description                                                                                                                                                                                                   | Required | Example                                        |
-|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|------------------------------------------------|
-| `connection`            | String line  for connection to  SQL SERVER. More information about it [Connection](https://github.com/denisenkom/go-mssqldb#the-connection-string-can-be-specified-in-one-of-three-formats)                   | **true** | sqlserver://sa:password@0.0.0.0?database=mydb  |
-| `table`                 | The name of a table in the database that the connector should  write to, by default.                                                                                                                          | **true** | users                                          |
-| `primaryKey`            | Column name that records should use for their `Key` fields.                                                                                                                                                   | **true** | id                                             |
-| `orderingColumn`        | The name of a column that the connector will use for ordering rows. Its values must be unique and suitable for sorting, otherwise, the snapshot won't work correctly.                                         | **true** | id                                             |
-| `column`                | Comma separated list of column names that should be included in each Record's payload. If the field is not empty it must contain values of the `primaryKey` and `orderingColumn` fields. By default: all rows | false    | id,name,age                                    |
-| `batchSize`             | Size of rows batch. By default is 1000                                                                                                                                                                        | false    | 100                                            |
+| Name                      | Description                                                                                                                                                                                                   | Required | Example                                       |
+|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------------------------------------------|
+| `connection`              | String line  for connection to  SQL SERVER. More information about it [Connection](https://github.com/denisenkom/go-mssqldb#the-connection-string-can-be-specified-in-one-of-three-formats)                   | **true** | sqlserver://sa:password@0.0.0.0?database=mydb |
+| `table`                   | The name of a table in the database that the connector should  write to, by default.                                                                                                                          | **true** | users                                         |
+| `primaryKey`              | Column name that records should use for their `Key` fields.                                                                                                                                                   | **true** | id                                            |
+| `orderingColumn`          | The name of a column that the connector will use for ordering rows. Its values must be unique and suitable for sorting, otherwise, the snapshot won't work correctly.                                         | **true** | id                                            |
+| `column`                  | Comma separated list of column names that should be included in each Record's payload. If the field is not empty it must contain values of the `primaryKey` and `orderingColumn` fields. By default: all rows | false    | id,name,age                                   |
+| `snapshot`                | Whether or not the plugin will take a snapshot of the entire table before starting cdc mode, by default true.                                                                                                 | false    | false                                         |
+| `batchSize`               | Size of rows batch. By default is 1000                                                                                                                                                                        | false    | 100                                           |
 
 ### Snapshot
+When the connector first starts, snapshot mode is enabled.
+
 First time when the snapshot iterator starts work, it is get max value from `orderingColumn` and saves this value to position.
 The snapshot iterator reads all rows, where `orderingColumn` values less or equal maxValue, from the table in batches.
 
@@ -65,6 +68,8 @@ If snapshot stops it will parse position from last record and will try gets row 
 
 
 When all records are returned, the connector switches to the CDC iterator.
+
+This behavior is enabled by default, but can be turned off by adding "snapshot":"false" to the Source configuration.
 
 ### Change Data Capture (CDC)
 

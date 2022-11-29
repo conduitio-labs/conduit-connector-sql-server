@@ -70,8 +70,7 @@ func (w *Writer) Close(ctx context.Context) error {
 	return w.db.Close()
 }
 
-// Delete deletes records by a key. First it looks in the sdk.Record.Key,
-// if it doesn't find a key there it will use the default configured value for a key.
+// Delete deletes records by a key.
 func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 	tableName := w.getTableName(record.Metadata)
 
@@ -94,8 +93,7 @@ func (w *Writer) Delete(ctx context.Context, record sdk.Record) error {
 	return nil
 }
 
-// Update updates records by a key. First it looks in the sdk.Record.Key,
-// if it doesn't find a key there it will use the default configured value for a key.
+// Update updates records by a key.
 func (w *Writer) Update(ctx context.Context, record sdk.Record) error {
 	tableName := w.getTableName(record.Metadata)
 

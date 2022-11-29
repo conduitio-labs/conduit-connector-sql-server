@@ -102,7 +102,7 @@ func (i *CDCIterator) HasNext(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("load rows: %w", err)
 	}
 
-	return false, nil
+	return i.rows.Next(), nil
 }
 
 // Next get new record.

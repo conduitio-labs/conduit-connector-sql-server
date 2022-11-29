@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -549,6 +550,85 @@ func TestSource_CDC_Success(t *testing.T) {
 	is.Equal(sdk.OperationDelete, r.Operation)
 
 	// check teardown.
+	err = s.Teardown(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSource_Snapshot_Off(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	tableName := randomIdentifier(t)
+
+	cfg, err := prepareConfigMap(tableName)
+	if err != nil {
+		t.Log(err)
+		t.Skip()
+	}
+
+	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = db.PingContext(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() {
+		_, err = db.ExecContext(ctx, fmt.Sprintf(queryDropTable, tableName))
+		if err != nil {
+			t.Log(err)
+		}
+
+		_, err = db.ExecContext(ctx, fmt.Sprintf(queryDropTrackingTable, tableName))
+		if err != nil {
+			t.Log(err)
+		}
+
+		db.Close()
+	})
+
+	err = prepareData(ctx, db, tableName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// turn off snapshot
+	cfg[KeySnapshot] = "false"
+
+	s := new(Source)
+
+	err = s.Configure(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Start first time with nil position.
+	err = s.Open(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// update.
+	_, err = db.ExecContext(ctx, fmt.Sprintf(queryUpdate, tableName))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Check read. Snapshot data must be missed.
+	r, err := s.Read(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(r.Operation, sdk.OperationUpdate) {
+		t.Fatal(errors.New("not wanted type"))
+	}
+
 	err = s.Teardown(ctx)
 	if err != nil {
 		t.Fatal(err)
