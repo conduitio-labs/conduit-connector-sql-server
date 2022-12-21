@@ -38,7 +38,7 @@ If a record contains a `sqlserver.table` property in its metadata it will be ins
 to use the table configured in the connector. Thus, a Destination can support multiple tables in a single connector,
 as long as the user has proper access to those tables.
 
-### Source
+## Source
 
 The source connects to the database using the provided connection and starts creating records for each table row
 and each detected change.
