@@ -29,8 +29,8 @@ import (
 const (
 	// sql server date, time column types.
 	dateType           = "date"
-	datetime2Type      = "datetime2Type"
-	datetimeType       = "datetimeType"
+	datetime2Type      = "datetime2"
+	datetimeType       = "datetime"
 	datetimeOffsetType = "datetimeoffset"
 	smallDateTimeType  = "smalldatetime"
 	timeType           = "time"
