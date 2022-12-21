@@ -285,7 +285,7 @@ func TestSource_Snapshot_Key_From_Config(t *testing.T) {
 	}
 
 	// set key.
-	cfg[KeyPrimaryKey] = "cl_tinyint"
+	cfg[KeyPrimaryKeys] = "cl_tinyint"
 
 	db, err := sql.Open("mssql", cfg[config.KeyConnection])
 	if err != nil {
@@ -365,7 +365,7 @@ func TestSource_Snapshot_Key_From_Table(t *testing.T) {
 	}
 
 	// set empty key.
-	cfg[KeyPrimaryKey] = ""
+	cfg[KeyPrimaryKeys] = ""
 
 	db, err := sql.Open("mssql", cfg[config.KeyConnection])
 	if err != nil {
@@ -645,7 +645,7 @@ func prepareConfigMap(table string) (map[string]string, error) {
 	return map[string]string{
 		config.KeyConnection: connection,
 		config.KeyTable:      table,
-		KeyPrimaryKey:        "id",
+		KeyPrimaryKeys:       "id",
 		KeyOrderingColumn:    "id",
 	}, nil
 }

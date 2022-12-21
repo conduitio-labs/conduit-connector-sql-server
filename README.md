@@ -45,15 +45,14 @@ and each detected change.
 
 ### Configuration options
 
-| Name                      | Description                                                                                                                                                                                                   | Required | Example                                       |
-|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------------------------------------------|
-| `connection`              | String line  for connection to  SQL SERVER. More information about it [Connection](https://github.com/denisenkom/go-mssqldb#the-connection-string-can-be-specified-in-one-of-three-formats)                   | **true** | sqlserver://sa:password@0.0.0.0?database=mydb |
-| `table`                   | The name of a table in the database that the connector should  write to, by default.                                                                                                                          | **true** | users                                         |
-| `primaryKey`              | Column name that records should use for their `Key` fields.                                                                                                                                                   | **true** | id                                            |
-| `orderingColumn`          | The name of a column that the connector will use for ordering rows. Its values must be unique and suitable for sorting, otherwise, the snapshot won't work correctly.                                         | **true** | id                                            |
-| `column`                  | Comma separated list of column names that should be included in each Record's payload. If the field is not empty it must contain values of the `primaryKey` and `orderingColumn` fields. By default: all rows | false    | id,name,age                                   |
-| `snapshot`                | Whether or not the plugin will take a snapshot of the entire table before starting cdc mode, by default true.                                                                                                 | false    | false                                         |
-| `batchSize`               | Size of rows batch. By default is 1000                                                                                                                                                                        | false    | 100                                           |
+| Name             | Description                                                                                                                                                                                                        | Required | Example                                       |
+|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------------------------------------------|
+| `connection`     | String line  for connection to  SQL SERVER. More information about it [Connection](https://github.com/denisenkom/go-mssqldb#the-connection-string-can-be-specified-in-one-of-three-formats)                        | **true** | sqlserver://sa:password@0.0.0.0?database=mydb |
+| `table`          | The name of a table in the database that the connector should  write to, by default.                                                                                                                               | **true** | users                                         |
+| `orderingColumn` | The name of a column that the connector will use for ordering rows. Its values must be unique and suitable for sorting, otherwise, the snapshot won't work correctly.                                              | **true** | id                                            |
+| `primaryKeys`    | Comma separated list of column names that records could use for their `Key` fields. By default connector uses primary keys from table if they are not exist connector will use ordering column.                    | false    | id,name                                       |
+| `snapshot`       | Whether or not the plugin will take a snapshot of the entire table before starting cdc mode, by default true.                                                                                                      | false    | false                                         |
+| `batchSize`      | Size of rows batch. By default is 1000                                                                                                                                                                             | false    | 100                                           |
 
 ### Snapshot
 When the connector first starts, snapshot mode is enabled.
@@ -81,7 +80,7 @@ same columns as the target table plus three additional columns:
 |---------------------------------|------------------------------------------------------|
 | `CONDUIT_TRACKING_ID`           | Autoincrement index for the position.                |
 | `CONDUIT_OPERATION_TYPE`        | Operation type: `insert`, `update`, or `delete`.     |
-| `CONDUIT_TRACKING_CREATED_DATE` | Date when the event was added to the tacking table.  |
+| `CONDUIT_TRACKING_CREATED_DATE` | Date when the event was added to the tracking table. |
 
 
 Triggers have name pattern `CONDUIT_TRIGGER_{{operation_type}}_{{table}}`.

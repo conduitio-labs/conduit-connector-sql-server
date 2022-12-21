@@ -26,12 +26,10 @@ import (
 const (
 	// KeyOrderingColumn is a config name for an ordering column.
 	KeyOrderingColumn = "orderingColumn"
-	// KeyColumns is a config name for columns.
-	KeyColumns = "columns"
 	// KeyBatchSize is a config name for a batch size.
 	KeyBatchSize = "batchSize"
-	// KeyPrimaryKey is column name that records should use for their `Key` fields.
-	KeyPrimaryKey string = "primaryKey"
+	// KeyPrimaryKeys are columns names that records should use for their `Key` fields.
+	KeyPrimaryKeys string = "primaryKeys"
 	// KeySnapshot is a config name for snapshotMode.
 	KeySnapshot = "snapshot"
 
@@ -48,12 +46,10 @@ type Config struct {
 
 	// OrderingColumn is a name of a column that the connector will use for ordering rows.
 	OrderingColumn string `key:"orderingColumn" validate:"required,max=128"`
-	// Columns  list of column names that should be included in each Record's payload.
-	Columns []string `key:"columns" validate:"contains_or_default=OrderingColumn,dive,max=128"`
 	// BatchSize is a size of rows batch.
 	BatchSize int `key:"batchSize" validate:"gte=1,lte=100000"`
-	// Key - Column name that records should use for their `Key` fields.
-	Key string `validate:"max=128"`
+	// Keys - Column names that records should use for their `Key` fields.
+	Keys []string `validate:"dive,max=128"`
 	// Snapshot whether or not the plugin will take a snapshot of the entire table before starting cdc.
 	Snapshot bool
 }
@@ -69,12 +65,11 @@ func Parse(cfg map[string]string) (Config, error) {
 		Config:         common,
 		OrderingColumn: cfg[KeyOrderingColumn],
 		BatchSize:      defaultBatchSize,
-		Key:            cfg[KeyPrimaryKey],
 		Snapshot:       snapshotDefault,
 	}
 
-	if columns := cfg[KeyColumns]; columns != "" {
-		sourceConfig.Columns = strings.Split(columns, ",")
+	if primaryKeys := cfg[KeyPrimaryKeys]; primaryKeys != "" {
+		sourceConfig.Keys = strings.Split(primaryKeys, ",")
 	}
 
 	if batchSize := cfg[KeyBatchSize]; batchSize != "" {

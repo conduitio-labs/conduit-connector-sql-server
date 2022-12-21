@@ -53,19 +53,14 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 			Required:    true,
 			Default:     "",
 		},
-		KeyPrimaryKey: {
-			Description: "A name of column that connector will use for create record key",
+		KeyPrimaryKeys: {
+			Description: "Names of columns that connector will use for create record key",
 			Required:    false,
 			Default:     "",
 		},
 		KeyOrderingColumn: {
 			Description: "A name of a column that the connector will use for ordering rows.",
 			Required:    true,
-			Default:     "",
-		},
-		KeyColumns: {
-			Description: "The list of column names that should be included in each Record's payload",
-			Required:    false,
 			Default:     "",
 		},
 		KeyBatchSize: {
@@ -104,8 +99,8 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 		return fmt.Errorf("ping sql server: %w", err)
 	}
 
-	s.iterator, err = iterator.NewCombinedIterator(ctx, db, s.config.Connection, s.config.Table, s.config.Key,
-		s.config.OrderingColumn, s.config.Columns, s.config.BatchSize, s.config.Snapshot, rp)
+	s.iterator, err = iterator.NewCombinedIterator(ctx, db, s.config.Connection, s.config.Table,
+		s.config.OrderingColumn, s.config.Keys, s.config.BatchSize, s.config.Snapshot, rp)
 	if err != nil {
 		return fmt.Errorf("create combined iterator: %w", err)
 	}

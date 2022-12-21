@@ -40,11 +40,8 @@ type CombinedIterator struct {
 	table string
 	// trackingTable - tracking table name.
 	trackingTable string
-	// columns list of table columns for record payload
-	// if empty - will get all columns.
-	columns []string
-	// key Name of column what iterator use for setting key in record.
-	key string
+	// keys Names of columns what iterator uses for record.Key field.
+	keys []string
 	// orderingColumn Name of column what iterator use for sorting data.
 	orderingColumn string
 	// batchSize size of batch.
@@ -57,8 +54,8 @@ type CombinedIterator struct {
 func NewCombinedIterator(
 	ctx context.Context,
 	db *sqlx.DB,
-	conn, table, key, orderingColumn string,
-	columns []string,
+	conn, table, orderingColumn string,
+	keys []string,
 	batchSize int,
 	snapshot bool,
 	sdkPosition sdk.Position,
@@ -68,19 +65,16 @@ func NewCombinedIterator(
 	it := &CombinedIterator{
 		conn:           conn,
 		table:          table,
-		columns:        columns,
 		orderingColumn: orderingColumn,
 		batchSize:      batchSize,
 		trackingTable:  fmt.Sprintf(trackingTablePattern, table),
 	}
 
 	// set key field.
-	err = it.setKey(ctx, db, key)
+	err = it.setKeys(ctx, db, keys)
 	if err != nil {
 		return nil, fmt.Errorf("set key: %w", err)
 	}
-
-	it.checkColumnsField()
 
 	// get column types for converting.
 	it.columnTypes, err = columntypes.GetColumnTypes(ctx, db, table)
@@ -100,14 +94,14 @@ func NewCombinedIterator(
 	}
 
 	if snapshot && (pos == nil || pos.IteratorType == position.TypeSnapshot) {
-		it.snapshot, err = NewSnapshotIterator(ctx, db, it.table, it.orderingColumn, it.key, it.columns,
+		it.snapshot, err = NewSnapshotIterator(ctx, db, it.table, it.orderingColumn, it.keys,
 			it.batchSize, pos, it.columnTypes)
 		if err != nil {
 			return nil, fmt.Errorf("new shapshot iterator: %w", err)
 		}
 	} else {
-		it.cdc, err = NewCDCIterator(ctx, db, it.table, it.trackingTable, it.key,
-			it.columns, it.batchSize, pos, it.columnTypes)
+		it.cdc, err = NewCDCIterator(ctx, db, it.table, it.trackingTable, it.keys,
+			it.batchSize, pos, it.columnTypes)
 		if err != nil {
 			return nil, fmt.Errorf("new cdc iterator: %w", err)
 		}
@@ -311,8 +305,8 @@ func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
 		return err
 	}
 
-	c.cdc, err = NewCDCIterator(ctx, db, c.table, c.trackingTable, c.key,
-		c.columns, c.batchSize, nil, c.columnTypes)
+	c.cdc, err = NewCDCIterator(ctx, db, c.table, c.trackingTable, c.keys,
+		c.batchSize, nil, c.columnTypes)
 	if err != nil {
 		return fmt.Errorf("new cdc iterator: %w", err)
 	}
@@ -320,65 +314,57 @@ func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
 	return nil
 }
 
-// getPrimaryKeyField - get info about primary key field.
-func (c *CombinedIterator) getPrimaryKeyFieldFromTable(ctx context.Context, db *sqlx.DB, table string) (string, error) {
+// getPrimaryKeysFromTable - get info about primary keys fields.
+func (c *CombinedIterator) getPrimaryKeysFromTable(
+	ctx context.Context,
+	db *sqlx.DB,
+	table string,
+) ([]string, error) {
 	rows, err := db.QueryxContext(ctx, fmt.Sprintf(queryGetPrimaryKey, table, table))
 	if err != nil {
-		return "", fmt.Errorf("get primary key: %w", err)
+		return nil, fmt.Errorf("get primary key: %w", err)
 	}
 
-	var field string
+	var keys []string
 
 	for rows.Next() {
+		var field string
 		err = rows.Scan(&field)
 		if err != nil {
-			return "", fmt.Errorf("scan rows: %w", err)
+			return nil, fmt.Errorf("scan rows: %w", err)
 		}
+
+		keys = append(keys, field)
 	}
 
-	return field, nil
+	return keys, nil
 }
 
-// setKey - set key field by priority:
-// 1. Key from config.
-// 2. Primary key from table.
+// setKeys - set key field by priority:
+// 1. Keys from config.
+// 2. Primary keys from table.
 // 3. Ordering column.
-func (c *CombinedIterator) setKey(ctx context.Context, db *sqlx.DB, keyFromConfig string) error {
-	if keyFromConfig != "" {
-		c.key = keyFromConfig
+func (c *CombinedIterator) setKeys(ctx context.Context, db *sqlx.DB, cfgKeys []string) error {
+	if len(cfgKeys) > 0 {
+		c.keys = cfgKeys
 
 		return nil
 	}
 
-	key, err := c.getPrimaryKeyFieldFromTable(ctx, db, c.table)
+	keys, err := c.getPrimaryKeysFromTable(ctx, db, c.table)
 	if err != nil {
 		return fmt.Errorf("get primary key from table: %w", err)
 	}
 
-	if key != "" {
-		c.key = key
+	if len(keys) > 0 {
+		c.keys = keys
 
 		return nil
 	}
 
-	c.key = c.orderingColumn
+	c.keys = []string{c.orderingColumn}
 
 	return nil
-}
-
-// checkColumnsField check if key exist in custom columns, and if not add it.
-func (c *CombinedIterator) checkColumnsField() {
-	if c.columns == nil {
-		return
-	}
-
-	for i := range c.columns {
-		if c.columns[i] == c.key {
-			return
-		}
-	}
-
-	c.columns = append(c.columns, c.key)
 }
 
 func getTriggerName(operation, table string) string {
