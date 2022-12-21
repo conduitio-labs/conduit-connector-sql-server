@@ -37,11 +37,8 @@ type CDCIterator struct {
 	table string
 	// trackingTable - tracking table name.
 	trackingTable string
-	// columns list of table columns for record payload
-	// if empty - will get all columns.
-	columns []string
-	// key Name of column what iterator use for setting key in record.
-	key string
+	// keys Names of columns what iterator uses for record.Key field.
+	keys []string
 	// batchSize size of batch.
 	batchSize int
 	// position last recorded position.
@@ -62,8 +59,8 @@ type CDCIterator struct {
 func NewCDCIterator(
 	ctx context.Context,
 	db *sqlx.DB,
-	table, trackingTable, key string,
-	columns []string,
+	table, trackingTable string,
+	keys []string,
 	batchSize int,
 	position *position.Position,
 	columnTypes map[string]string,
@@ -72,8 +69,7 @@ func NewCDCIterator(
 		db:            db,
 		table:         table,
 		trackingTable: trackingTable,
-		columns:       columns,
-		key:           key,
+		keys:          keys,
 		batchSize:     batchSize,
 		position:      position,
 		columnTypes:   columnTypes,
@@ -124,7 +120,7 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 
 	operationType, ok := transformRow[columnOperationType].(string)
 	if !ok {
-		return sdk.Record{}, ErrWrongTrackingIDType
+		return sdk.Record{}, ErrWrongTrackingOperatorType
 	}
 
 	pos := position.Position{
@@ -138,8 +134,13 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("convert position %w", err)
 	}
 
-	if _, ok = transformRow[i.key]; !ok {
-		return sdk.Record{}, ErrKeyIsNotExist
+	keysMap := make(map[string]any)
+	for _, val := range i.keys {
+		if _, ok := transformRow[val]; !ok {
+			return sdk.Record{}, fmt.Errorf("key %v, %w", val, ErrNoKey)
+		}
+
+		keysMap[val] = transformRow[val]
 	}
 
 	// delete tracking columns
@@ -160,13 +161,13 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	switch operationType {
 	case operationTypeInsert:
 		return sdk.Util.Source.NewRecordCreate(convertedPosition, metadata,
-			sdk.StructuredData{i.key: transformRow[i.key]}, sdk.RawData(transformedRowBytes)), nil
+			sdk.StructuredData(keysMap), sdk.RawData(transformedRowBytes)), nil
 	case operationTypeUpdate:
 		return sdk.Util.Source.NewRecordUpdate(convertedPosition, metadata,
-			sdk.StructuredData{i.key: transformRow[i.key]}, nil, sdk.RawData(transformedRowBytes)), nil
+			sdk.StructuredData(keysMap), nil, sdk.RawData(transformedRowBytes)), nil
 	case operationTypeDelete:
 		return sdk.Util.Source.NewRecordDelete(convertedPosition, metadata,
-			sdk.StructuredData{i.key: transformRow[i.key]}), nil
+			sdk.StructuredData(keysMap)), nil
 	default:
 		return sdk.Record{}, ErrUnknownOperatorType
 	}
@@ -222,25 +223,18 @@ func (i *CDCIterator) Ack(ctx context.Context, pos *position.Position) error {
 // LoadRows selects a batch of rows from a database, based on the
 // table, columns, orderingColumn, batchSize and the current position.
 func (i *CDCIterator) loadRows(ctx context.Context) error {
-	selectBuilder := sqlbuilder.NewSelectBuilder()
+	builder := sqlbuilder.NewSelectBuilder()
 
-	if len(i.columns) > 0 {
-		// append additional columns
-		selectBuilder.Select(append(i.columns,
-			[]string{columnTrackingID, columnOperationType, columnTimeCreated}...)...)
-	} else {
-		selectBuilder.Select("*")
-	}
-
-	selectBuilder.From(i.trackingTable)
+	builder.Select("*")
+	builder.From(i.trackingTable)
 
 	if i.position != nil {
-		selectBuilder.Where(
-			selectBuilder.GreaterThan(columnTrackingID, i.position.CDCID),
+		builder.Where(
+			builder.GreaterThan(columnTrackingID, i.position.CDCID),
 		)
 	}
 
-	q, args := selectBuilder.
+	q, args := builder.
 		OrderBy(columnTrackingID).
 		Build()
 

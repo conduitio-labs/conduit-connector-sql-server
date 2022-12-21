@@ -35,11 +35,8 @@ type SnapshotIterator struct {
 
 	// table - table name.
 	table string
-	// columns list of table columns for record payload
-	// if empty - will get all columns.
-	columns []string
-	// key Name of column what iterator use for setting key in record.
-	key string
+	// keys Names of columns what iterator uses for record.Key field.
+	keys []string
 	// orderingColumn Name of column what iterator using for sorting data.
 	orderingColumn string
 	// maxValue from ordering column.
@@ -55,8 +52,8 @@ type SnapshotIterator struct {
 func NewSnapshotIterator(
 	ctx context.Context,
 	db *sqlx.DB,
-	table, orderingColumn, key string,
-	columns []string,
+	table, orderingColumn string,
+	keys []string,
 	batchSize int,
 	position *position.Position,
 	columnTypes map[string]string,
@@ -66,8 +63,7 @@ func NewSnapshotIterator(
 	snapshotIterator := &SnapshotIterator{
 		db:             db,
 		table:          table,
-		columns:        columns,
-		key:            key,
+		keys:           keys,
 		orderingColumn: orderingColumn,
 		batchSize:      batchSize,
 		position:       position,
@@ -122,7 +118,7 @@ func (i *SnapshotIterator) Next(ctx context.Context) (sdk.Record, error) {
 	}
 
 	if _, ok := transformRow[i.orderingColumn]; !ok {
-		return sdk.Record{}, ErrOrderingColumnIsNotExist
+		return sdk.Record{}, ErrNoOrderingColumn
 	}
 
 	pos := position.Position{
@@ -132,13 +128,18 @@ func (i *SnapshotIterator) Next(ctx context.Context) (sdk.Record, error) {
 		Time:                     time.Now(),
 	}
 
-	convertedPosition, err := pos.ConvertToSDKPosition()
+	sdkPos, err := pos.ConvertToSDKPosition()
 	if err != nil {
 		return sdk.Record{}, fmt.Errorf("convert position %w", err)
 	}
 
-	if _, ok := transformRow[i.key]; !ok {
-		return sdk.Record{}, ErrKeyIsNotExist
+	keysMap := make(map[string]any)
+	for _, val := range i.keys {
+		if _, ok := transformRow[val]; !ok {
+			return sdk.Record{}, fmt.Errorf("key %v, %w", val, ErrNoKey)
+		}
+
+		keysMap[val] = transformRow[val]
 	}
 
 	transformedRowBytes, err := json.Marshal(transformRow)
@@ -151,8 +152,12 @@ func (i *SnapshotIterator) Next(ctx context.Context) (sdk.Record, error) {
 	metadata := sdk.Metadata(map[string]string{metadataTable: i.table})
 	metadata.SetCreatedAt(time.Now())
 
-	return sdk.Util.Source.NewRecordSnapshot(convertedPosition, metadata,
-		sdk.StructuredData{i.key: transformRow[i.key]}, sdk.RawData(transformedRowBytes)), nil
+	return sdk.Util.Source.NewRecordSnapshot(
+			sdkPos,
+			metadata,
+			sdk.StructuredData(keysMap),
+			sdk.RawData(transformedRowBytes)),
+		nil
 }
 
 // Stop shutdown iterator.
@@ -174,24 +179,19 @@ func (i *SnapshotIterator) Stop(ctx context.Context) error {
 // LoadRows selects a batch of rows from a database, based on the CombinedIterator's
 // table, columns, orderingColumn, batchSize and the current position.
 func (i *SnapshotIterator) loadRows(ctx context.Context) error {
-	selectBuilder := sqlbuilder.NewSelectBuilder()
+	builder := sqlbuilder.NewSelectBuilder()
 
-	if len(i.columns) > 0 {
-		selectBuilder.Select(i.columns...)
-	} else {
-		selectBuilder.Select("*")
-	}
-
-	selectBuilder.From(i.table)
+	builder.Select("*")
+	builder.From(i.table)
 
 	if i.position != nil {
-		selectBuilder.Where(
-			selectBuilder.GreaterThan(i.orderingColumn, i.position.SnapshotLastProcessedVal),
-			selectBuilder.LessEqualThan(i.orderingColumn, i.position.SnapshotMaxValue),
+		builder.Where(
+			builder.GreaterThan(i.orderingColumn, i.position.SnapshotLastProcessedVal),
+			builder.LessEqualThan(i.orderingColumn, i.position.SnapshotMaxValue),
 		)
 	}
 
-	q, args := selectBuilder.
+	q, args := builder.
 		OrderBy(i.orderingColumn).
 		Build()
 	q = fmt.Sprintf("%s OFFSET 0 ROWS FETCH FIRST %d ROWS ONLY", q, i.batchSize)

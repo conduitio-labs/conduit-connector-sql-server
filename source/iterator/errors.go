@@ -19,9 +19,10 @@ import (
 )
 
 var (
-	ErrKeyIsNotExist            = errors.New("key is not exist")
-	ErrOrderingColumnIsNotExist = errors.New("ordering column is not exist")
-	ErrWrongTrackingIDType      = errors.New("tracking id wrong type")
-	ErrNoInitializedIterator    = errors.New("not initialized iterator")
-	ErrUnknownOperatorType      = errors.New("unknown iterator type")
+	ErrNoKey                     = errors.New("no key")
+	ErrNoOrderingColumn          = errors.New("no ordering column")
+	ErrWrongTrackingIDType       = errors.New("tracking id wrong type")
+	ErrWrongTrackingOperatorType = errors.New("tracking column wrong type")
+	ErrNoInitializedIterator     = errors.New("not initialized iterator")
+	ErrUnknownOperatorType       = errors.New("unknown iterator type")
 )

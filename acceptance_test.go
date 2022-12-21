@@ -81,6 +81,7 @@ func TestAcceptance(t *testing.T) {
 				SourceConfig:      cfg,
 				DestinationConfig: cfg,
 				BeforeTest:        beforeTest(t, cfg),
+				AfterTest:         afterTest(t, cfg),
 			},
 		},
 	})
@@ -101,37 +102,9 @@ func beforeTest(t *testing.T, cfg map[string]string) func(t *testing.T) {
 	}
 }
 
-func prepareConfig(t *testing.T) map[string]string {
-	conn := os.Getenv("SQL_SERVER_CONNECTION")
-	if conn == "" {
-		t.Skip("SQL_SERVER_CONNECTION env var must be set")
-
-		return nil
-	}
-
-	return map[string]string{
-		config.KeyConnection: conn,
-		s.KeyOrderingColumn:  "ID",
-		s.KeyPrimaryKey:      "ID",
-	}
-}
-
-func prepareData(t *testing.T, cfg map[string]string) error {
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(fmt.Sprintf(queryCreateTestTable, cfg[config.KeyTable]))
-	if err != nil {
-		return err
-	}
-
-	db.Close()
-
-	// drop table
-	t.Cleanup(func() {
-		db, err = sql.Open("mssql", cfg[config.KeyConnection])
+func afterTest(t *testing.T, cfg map[string]string) func(t *testing.T) {
+	return func(t *testing.T) {
+		db, err := sql.Open("mssql", cfg[config.KeyConnection])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -172,7 +145,36 @@ func prepareData(t *testing.T, cfg map[string]string) error {
 		if err = db.Close(); err != nil {
 			t.Errorf("close database: %v", err)
 		}
-	})
+	}
+}
+
+func prepareConfig(t *testing.T) map[string]string {
+	conn := os.Getenv("SQL_SERVER_CONNECTION")
+	if conn == "" {
+		t.Skip("SQL_SERVER_CONNECTION env var must be set")
+
+		return nil
+	}
+
+	return map[string]string{
+		config.KeyConnection: conn,
+		s.KeyOrderingColumn:  "ID",
+		s.KeyPrimaryKeys:     "ID",
+	}
+}
+
+func prepareData(t *testing.T, cfg map[string]string) error {
+	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(fmt.Sprintf(queryCreateTestTable, cfg[config.KeyTable]))
+	if err != nil {
+		return err
+	}
+
+	db.Close()
 
 	return nil
 }
