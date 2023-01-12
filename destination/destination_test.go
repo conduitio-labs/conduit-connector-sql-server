@@ -77,7 +77,7 @@ func TestDestination_Configure(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			d := &Destination{}
+			d := New()
 			if err := d.Configure(context.Background(), tt.args.cfg); (err != nil) != tt.wantErr {
 				t.Errorf("Destination.Configure() error = %v, wantErr %v", err, tt.wantErr)
 			}
