@@ -19,6 +19,10 @@ import (
 	"testing"
 )
 
+const (
+	conn = "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30"
+)
+
 func TestParse(t *testing.T) {
 	t.Parallel()
 
@@ -35,12 +39,12 @@ func TestParse(t *testing.T) {
 			name: "success",
 			args: args{
 				cfg: map[string]string{
-					KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
+					KeyConnection: conn,
 					KeyTable:      "CLIENTS",
 				},
 			},
 			want: Config{
-				Connection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
+				Connection: conn,
 				Table:      "CLIENTS",
 			},
 			wantErr: false,
@@ -60,7 +64,7 @@ func TestParse(t *testing.T) {
 			name: "fail, missed table",
 			args: args{
 				cfg: map[string]string{
-					KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
+					KeyConnection: conn,
 					KeyTable:      "",
 				},
 			},
@@ -71,7 +75,7 @@ func TestParse(t *testing.T) {
 			name: "fail, invalid table",
 			args: args{
 				cfg: map[string]string{
-					KeyConnection: "sqlserver://sa:password@0.0.0.0?database=mydb&connection+timeout=30",
+					KeyConnection: conn,
 					KeyTable: "somerealyrealyrealyorunrealynamewithalotcharactersandsomesymbolsbutwithsomesenceor" +
 						"notanywayitismustbesomecharactersheretocheckthistestwithlongtablename",
 				},

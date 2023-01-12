@@ -32,7 +32,7 @@ const (
 	metadataTable = "sqlserver.table"
 )
 
-// Writer implements a writer logic for db2 destination.
+// Writer implements a writer logic for sql server destination.
 type Writer struct {
 	db          *sql.DB
 	table       string
@@ -206,7 +206,7 @@ func (w *Writer) structurizeData(data sdk.Data) (sdk.StructuredData, error) {
 }
 
 // extractColumnsAndValues turns the payload into slices of
-// columns and values for inserting into db2.
+// columns and values for inserting into sql server.
 func (w *Writer) extractColumnsAndValues(payload sdk.StructuredData) ([]string, []any) {
 	var (
 		columns []string
