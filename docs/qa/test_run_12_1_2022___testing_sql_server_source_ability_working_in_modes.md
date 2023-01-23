@@ -1,3 +1,9 @@
+**Test Run 12/1/2022 - Testing SQL server source connector ability working in modes**
+
+**branch:** https://github.com/conduitio-labs/conduit-connector-sql-server/tree/development
+
+**commit** 2115493faaf6e10151ef2eec2856f4427b96d47
+
 | ID       | Title                                                                                                                                                                                                                                                    | Status | Comment                                       |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------- |
 | T3204635 | \------- snapshot config                                                                                                                                                                                                                                 | Passed |                                               |
