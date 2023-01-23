@@ -1,5 +1,10 @@
- Outer pipes  Cell padding 
-No sorting
+**Test Run 10/31/2022 - Functional testing SQL server**
+
+**branch** https://github.com/conduitio-labs/conduit-connector-sql-server/tree/develop
+
+**commit** 2115493faaf6e10151ef2eec2856f4427b96d47
+
+
 | ID       | Title                                                                                                                                                                                                                                                      | Status | Comment                                       |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------- |
 | T3140283 | \----------------Required config------------------                                                                                                                                                                                                         | Passed |                                               |
@@ -188,6 +193,3 @@ No sorting
 | T3130317 | Transfer data with column names in the camel case (example: {"CiTy":"Paris"}) -> the data is transferred to the SQL Server Destination                                                                                                                     | Passed |                                               |
 | T3130319 | 1\. Create the SQL Server source connector -> 2. Create the SQL Server destination connector with the same config as the SQL Server source -> 3. Start the pipeline -> data to be transmitted endlessly in a circle                                        | Passed |                                               |
 | T3130318 | The user can use the SQL Server Destination connector with the identical config in two (or more) pipelines at one time                                                                                                                                     | Passed |                                               |
-📋 Copy
-Clear
-Buy Me a Coffee at ko-fi.com
