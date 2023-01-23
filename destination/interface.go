@@ -20,6 +20,8 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+// For generate mock use command: make mockgen.
+
 // Writer defines a writer interface needed for the Destination.
 type Writer interface {
 	Delete(ctx context.Context, record sdk.Record) error
