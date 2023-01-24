@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate mockgen -package mock -source interface.go -destination mock/destination.go
+
 package destination
 
 import (
@@ -19,8 +21,6 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
-
-// For generate mock use command: make mockgen.
 
 // Writer defines a writer interface needed for the Destination.
 type Writer interface {

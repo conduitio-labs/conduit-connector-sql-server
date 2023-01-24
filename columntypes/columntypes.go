@@ -27,7 +27,8 @@ import (
 )
 
 const (
-	// sql server date, time column types.
+	// sql server column types.
+	// date, time column types.
 	dateType           = "date"
 	datetime2Type      = "datetime2"
 	datetimeType       = "datetime"
@@ -35,7 +36,7 @@ const (
 	smallDateTimeType  = "smalldatetime"
 	timeType           = "time"
 
-	// sql server binaryType types.
+	// binary types.
 	binaryType    = "binaryType"
 	varbinaryType = "varbinaryType"
 	ImageType     = "ImageType"
