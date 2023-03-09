@@ -9,7 +9,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/huandu/go-sqlbuilder v1.20.0
 	github.com/matryer/is v1.4.1
-	go.uber.org/multierr v1.9.0
+	go.uber.org/multierr v1.10.0
 )
 
 require (
@@ -42,7 +42,6 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	go.buf.build/grpc/go/conduitio/conduit-connector-protocol v1.4.5 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/exp v0.0.0-20221114191408-850992195362 // indirect
