@@ -7,7 +7,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.12.2
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/golang/mock v1.6.0
-	github.com/huandu/go-sqlbuilder v1.20.0
+	github.com/huandu/go-sqlbuilder v1.21.0
 	github.com/matryer/is v1.4.1
 	go.uber.org/multierr v1.11.0
 )
