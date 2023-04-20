@@ -70,7 +70,7 @@ type Querier interface {
 }
 
 // TransformRow converts row map values to appropriate Go types, based on the columnTypes.
-func TransformRow(ctx context.Context, row map[string]any, columnTypes map[string]string) (map[string]any, error) {
+func TransformRow(_ context.Context, row map[string]any, columnTypes map[string]string) (map[string]any, error) {
 	result := make(map[string]any, len(row))
 
 	for key, value := range row {
@@ -100,7 +100,7 @@ func TransformRow(ctx context.Context, row map[string]any, columnTypes map[strin
 
 // ConvertStructureData converts a sdk.StructureData values to a proper database types.
 func ConvertStructureData(
-	ctx context.Context,
+	_ context.Context,
 	columnTypes map[string]string,
 	data sdk.StructuredData,
 ) (sdk.StructuredData, error) {
@@ -177,6 +177,7 @@ func GetColumnTypes(ctx context.Context, querier Querier, tableName string) (map
 	if err != nil {
 		return nil, fmt.Errorf("query column types: %w", err)
 	}
+	defer rows.Close()
 
 	columnTypes := make(map[string]string)
 	for rows.Next() {
@@ -186,6 +187,10 @@ func GetColumnTypes(ctx context.Context, querier Querier, tableName string) (map
 		}
 
 		columnTypes[columnName] = dataType
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate rows error: %w", err)
 	}
 
 	return columnTypes, nil
