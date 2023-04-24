@@ -8,7 +8,7 @@ It provides both, a source and a destination SQL SERVER connector.
 
 ### Prerequisites
 
-- [Go](https://go.dev/) 1.18
+- [Go](https://go.dev/) '1.20'
 - (optional) [golangci-lint](https://github.com/golangci/golangci-lint) 1.48.0
 - (optional) [mock](https://github.com/golang/mock) 1.6.0
 

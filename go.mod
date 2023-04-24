@@ -1,6 +1,6 @@
 module github.com/conduitio-labs/conduit-connector-sql-server
 
-go 1.18
+go 1.20
 
 require (
 	github.com/conduitio/conduit-connector-sdk v0.6.0
