@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc & Yalantis.
+// Copyright © 2023 Meroxa, Inc & Yalantis.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package position
+//go:build sqlserver
+
+package main
 
 import (
-	"errors"
-)
-
-var (
-	ErrUnknownIteratorType = errors.New("unknown iterator type")
+	_ "github.com/conduitio/conduit-connector-sdk/cmd/paramgen"
+	_ "github.com/golang/mock/mockgen"
 )

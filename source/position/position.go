@@ -16,6 +16,7 @@ package position
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -29,6 +30,8 @@ const (
 	TypeSnapshot = "s"
 	TypeCDC      = "c"
 )
+
+var ErrUnknownIteratorType = errors.New("unknown iterator type")
 
 // Position represents DB2 position.
 type Position struct {
