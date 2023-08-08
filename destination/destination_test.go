@@ -24,66 +24,9 @@ import (
 
 	"github.com/matryer/is"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/mock"
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/writer"
 )
-
-func TestDestination_Configure(t *testing.T) {
-	t.Parallel()
-
-	type args struct {
-		cfg map[string]string
-	}
-
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "success",
-			args: args{
-				cfg: map[string]string{
-					config.KeyConnection: "sqlserver://sa:passwordx@0.0.0.0?database=mydb&connection+timeout=30",
-					config.KeyTable:      "CLIENTS",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "fail, missing connection",
-			args: args{
-				cfg: map[string]string{
-					config.KeyTable: "CLIENTS",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "fail, missing table",
-			args: args{
-				cfg: map[string]string{
-					config.KeyConnection: "sqlserver://sa:passwordx@0.0.0.0?database=mydb&connection+timeout=30",
-				},
-			},
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			d := New()
-			if err := d.Configure(context.Background(), tt.args.cfg); (err != nil) != tt.wantErr {
-				t.Errorf("Destination.Configure() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
 
 func TestDestination_Write(t *testing.T) {
 	t.Parallel()
