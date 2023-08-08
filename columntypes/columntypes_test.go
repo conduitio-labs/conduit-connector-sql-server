@@ -44,12 +44,13 @@ func Test_parseToTime(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		ts := tt
+		t.Run(ts.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := parseToTime(tt.strValue)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+			_, err := parseToTime(ts.strValue)
+			if (err != nil) != ts.wantErr {
+				t.Errorf("Parse() error = %v, wantErr %v", err, ts.wantErr)
 
 				return
 			}

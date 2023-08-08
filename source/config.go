@@ -15,13 +15,10 @@
 package source
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/conduitio-labs/conduit-connector-sql-server/config"
-	"github.com/conduitio-labs/conduit-connector-sql-server/validator"
 )
+
+//go:generate paramgen -output=paramgen_src.go Config
 
 const (
 	// KeyOrderingColumn is a config name for an ordering column.
@@ -34,12 +31,6 @@ const (
 	KeyPrimaryKey string = "primaryKey"
 	// KeySnapshot is a config name for snapshotMode.
 	KeySnapshot = "snapshot"
-
-	// snapshotDefault is a default value for the Snapshot field.
-	snapshotDefault = true
-
-	// defaultBatchSize is a default value for a BatchSize field.
-	defaultBatchSize = 1000
 )
 
 // Config holds source specific configurable values.
@@ -47,55 +38,13 @@ type Config struct {
 	config.Config
 
 	// OrderingColumn is a name of a column that the connector will use for ordering rows.
-	OrderingColumn string `key:"orderingColumn" validate:"required,max=128"`
+	OrderingColumn string `json:"orderingColumn" validate:"required"`
 	// Columns  list of column names that should be included in each Record's payload.
-	Columns []string `key:"columns" validate:"contains_or_default=OrderingColumn,dive,max=128"`
-	// BatchSize is a size of rows batch.
-	BatchSize int `key:"batchSize" validate:"gte=1,lte=100000"`
+	Columns []string `json:"columns"`
+	// BatchSize is the size of rows batch.
+	BatchSize int `json:"batchSize" default:"1000" validate:"gt=1,lt=100000"`
 	// Key - Column name that records should use for their `Key` fields.
-	Key string `validate:"max=128"`
-	// Snapshot whether or not the plugin will take a snapshot of the entire table before starting cdc.
-	Snapshot bool
-}
-
-// Parse maps the incoming map to the Config and validates it.
-func Parse(cfg map[string]string) (Config, error) {
-	common, err := config.Parse(cfg)
-	if err != nil {
-		return Config{}, fmt.Errorf("parse common config: %w", err)
-	}
-
-	sourceConfig := Config{
-		Config:         common,
-		OrderingColumn: cfg[KeyOrderingColumn],
-		BatchSize:      defaultBatchSize,
-		Key:            cfg[KeyPrimaryKey],
-		Snapshot:       snapshotDefault,
-	}
-
-	if columns := cfg[KeyColumns]; columns != "" {
-		sourceConfig.Columns = strings.Split(columns, ",")
-	}
-
-	if batchSize := cfg[KeyBatchSize]; batchSize != "" {
-		sourceConfig.BatchSize, err = strconv.Atoi(batchSize)
-		if err != nil {
-			return Config{}, fmt.Errorf("parse batchSize: %w", err)
-		}
-	}
-
-	if cfg[KeySnapshot] != "" {
-		snapshot, err := strconv.ParseBool(cfg[KeySnapshot])
-		if err != nil {
-			return Config{}, fmt.Errorf("parse %q: %w", KeySnapshot, err)
-		}
-
-		sourceConfig.Snapshot = snapshot
-	}
-
-	if err = validator.Validate(&sourceConfig); err != nil {
-		return Config{}, fmt.Errorf("validate source config: %w", err)
-	}
-
-	return sourceConfig, nil
+	Key string `json:"primaryKey"`
+	// Snapshot whether the plugin will take a snapshot of the entire table before starting cdc.
+	Snapshot bool `default:"true"`
 }

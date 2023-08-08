@@ -207,7 +207,7 @@ func (i *CDCIterator) Stop(ctx context.Context) error {
 }
 
 // Ack check if record with position was recorded.
-func (i *CDCIterator) Ack(ctx context.Context, pos *position.Position) error {
+func (i *CDCIterator) Ack(_ context.Context, pos *position.Position) error {
 	if len(i.errCh) > 0 {
 		for v := range i.errCh {
 			return fmt.Errorf("clear tracking table: %w", v)

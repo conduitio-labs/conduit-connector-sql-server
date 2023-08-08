@@ -194,7 +194,7 @@ func TestSource_Snapshot_Success(t *testing.T) {
 	is.Equal(wantedThirdBytes, r.Payload.After.Bytes())
 
 	// check ErrBackoffRetry.
-	r, err = s.Read(ctx)
+	_, err = s.Read(ctx)
 	is.Equal(sdk.ErrBackoffRetry, err)
 
 	err = s.Teardown(ctx)

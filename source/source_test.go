@@ -27,78 +27,8 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/mock"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
 )
-
-func TestSource_Configure(t *testing.T) {
-	s := Source{}
-
-	tests := []struct {
-		name    string
-		cfg     map[string]string
-		wantErr bool
-	}{
-		{
-			name: "success, required and default fields",
-			cfg: map[string]string{
-				config.KeyConnection: "HOSTNAME=localhost;DATABASE=testdb;PORT=50000;UID=DB2INST1;PWD=pwd",
-				config.KeyTable:      "CLIENTS",
-				KeyPrimaryKey:        "ID",
-				KeyColumns:           "",
-				KeyOrderingColumn:    "ID",
-				KeyBatchSize:         "",
-			},
-			wantErr: false,
-		},
-		{
-			name: "success, custom batch size",
-			cfg: map[string]string{
-				config.KeyConnection: "HOSTNAME=localhost;DATABASE=testdb;PORT=50000;UID=DB2INST1;PWD=pwd",
-				config.KeyTable:      "CLIENTS",
-				KeyPrimaryKey:        "ID",
-				KeyColumns:           "",
-				KeyOrderingColumn:    "ID",
-				KeyBatchSize:         "50",
-			},
-			wantErr: false,
-		},
-		{
-			name: "success, custom columns",
-			cfg: map[string]string{
-				config.KeyConnection: "HOSTNAME=localhost;DATABASE=testdb;PORT=50000;UID=DB2INST1;PWD=pwd",
-				config.KeyTable:      "CLIENTS",
-				KeyPrimaryKey:        "ID",
-				KeyColumns:           "ID,NAME",
-				KeyOrderingColumn:    "ID",
-				KeyBatchSize:         "50",
-			},
-			wantErr: false,
-		},
-		{
-			name: "failed, missed ordering column",
-			cfg: map[string]string{
-				config.KeyConnection: "HOSTNAME=localhost;DATABASE=testdb;PORT=50000;UID=DB2INST1;PWD=pwd",
-				config.KeyTable:      "CLIENTS",
-				KeyPrimaryKey:        "ID",
-				KeyColumns:           "ID,NAME",
-				KeyBatchSize:         "50",
-			},
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := s.Configure(context.Background(), tt.cfg)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-
-				return
-			}
-		})
-	}
-}
 
 func TestSource_Read(t *testing.T) {
 	t.Run("success", func(t *testing.T) {

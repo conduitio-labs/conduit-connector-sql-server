@@ -49,7 +49,7 @@ type driver struct {
 }
 
 // GenerateRecord generates a random sdk.Record.
-func (d *driver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Record {
+func (d *driver) GenerateRecord(_ *testing.T, operation sdk.Operation) sdk.Record {
 	atomic.AddInt64(&d.counter, 1)
 
 	return sdk.Record{
@@ -87,7 +87,7 @@ func TestAcceptance(t *testing.T) {
 }
 
 // beforeTest creates new table before each test.
-func beforeTest(t *testing.T, cfg map[string]string) func(t *testing.T) {
+func beforeTest(_ *testing.T, cfg map[string]string) func(t *testing.T) {
 	return func(t *testing.T) {
 		table := randomIdentifier(t)
 		t.Logf("table under test: %v", table)
@@ -147,6 +147,9 @@ func prepareData(t *testing.T, cfg map[string]string) error {
 
 		// check if table exist.
 		rows, er := db.Query(queryIfExistTable, cfg[config.KeyTable])
+		if rows.Err() != nil {
+			t.Error(rows.Err())
+		}
 		if er != nil {
 			t.Error(er)
 		}

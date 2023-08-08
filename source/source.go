@@ -23,7 +23,6 @@ import (
 
 	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/iterator"
 )
 
@@ -37,58 +36,23 @@ type Source struct {
 
 // New initialises a new source.
 func New() sdk.Source {
-	return &Source{}
+	return sdk.SourceWithMiddleware(&Source{}, sdk.DefaultSourceMiddleware()...)
 }
 
 // Parameters returns a map of named sdk.Parameters that describe how to configure the Source.
 func (s *Source) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
-		config.KeyConnection: {
-			Description: "Connection string to SQL Server",
-			Required:    true,
-			Default:     "",
-		},
-		config.KeyTable: {
-			Description: "A name of the table that the connector should write to.",
-			Required:    true,
-			Default:     "",
-		},
-		KeyPrimaryKey: {
-			Description: "A name of column that connector will use for create record key",
-			Required:    false,
-			Default:     "",
-		},
-		KeyOrderingColumn: {
-			Description: "A name of a column that the connector will use for ordering rows.",
-			Required:    true,
-			Default:     "",
-		},
-		KeyColumns: {
-			Description: "The list of column names that should be included in each Record's payload",
-			Required:    false,
-			Default:     "",
-		},
-		KeyBatchSize: {
-			Description: "The size of rows batch",
-			Required:    false,
-			Default:     "1000",
-		},
-		KeySnapshot: {
-			Description: "Whether or not the plugin will take a snapshot of the entire table before starting ",
-			Required:    false,
-			Default:     "true",
-		},
-	}
+	return s.config.Parameters()
 }
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
-func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error {
-	cfg, err := Parse(cfgRaw)
+func (s *Source) Configure(_ context.Context, cfg map[string]string) error {
+	var sourceConfig Config
+	err := sdk.Util.ParseConfig(cfg, &sourceConfig)
 	if err != nil {
 		return err
 	}
 
-	s.config = cfg
+	s.config = sourceConfig
 
 	return nil
 }

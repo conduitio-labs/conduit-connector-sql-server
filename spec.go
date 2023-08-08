@@ -18,6 +18,10 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+// version is set during the build process (i.e. the Makefile).
+// Default version matches default from runtime/debug.
+var version = "(devel)"
+
 // Specification returns the Plugin's Specification.
 func Specification() sdk.Specification {
 	return sdk.Specification{
@@ -25,7 +29,7 @@ func Specification() sdk.Specification {
 		Summary: "The SQL SERVER source and destination plugin for Conduit, written in Go.",
 		Description: "The SQL SERVER connector is one of Conduit plugins. " +
 			"It provides both, a source and a destination SQL SERVER connector.",
-		Version: "v0.1.0",
+		Version: version,
 		Author:  "Meroxa, Inc.& Yalantis",
 	}
 }

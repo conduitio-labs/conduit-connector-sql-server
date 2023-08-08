@@ -127,6 +127,9 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 
 	// check if table exist.
 	rows, err := tx.QueryContext(ctx, queryIfTableExist, c.trackingTable)
+	if rows.Err() != nil {
+		return fmt.Errorf("query exist table: %w", rows.Err())
+	}
 	if err != nil {
 		return fmt.Errorf("query exist table: %w", err)
 	}
@@ -323,9 +326,13 @@ func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
 // getPrimaryKeyField - get info about primary key field.
 func (c *CombinedIterator) getPrimaryKeyFieldFromTable(ctx context.Context, db *sqlx.DB, table string) (string, error) {
 	rows, err := db.QueryxContext(ctx, fmt.Sprintf(queryGetPrimaryKey, table, table))
+	if rows.Err() != nil {
+		return "", fmt.Errorf("get primary key: %w", rows.Err())
+	}
 	if err != nil {
 		return "", fmt.Errorf("get primary key: %w", err)
 	}
+	defer rows.Close()
 
 	var field string
 
