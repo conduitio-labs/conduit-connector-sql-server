@@ -17,8 +17,8 @@ package sqlserver
 import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/source"
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination"
+	"github.com/conduitio-labs/conduit-connector-sql-server/source"
 )
 
 var Connector = sdk.Connector{
