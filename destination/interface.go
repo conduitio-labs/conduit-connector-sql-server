@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sqlserver
+//go:generate mockgen -package mock -source interface.go -destination mock/destination.go
+
+package destination
 
 import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"context"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/source"
-	"github.com/conduitio-labs/conduit-connector-sql-server/destination"
+	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-var Connector = sdk.Connector{
-	NewSpecification: Specification,
-	NewSource:        source.New,
-	NewDestination:   destination.New,
+// Writer defines a writer interface needed for the Destination.
+type Writer interface {
+	Delete(ctx context.Context, record sdk.Record) error
+	Insert(ctx context.Context, record sdk.Record) error
+	Update(ctx context.Context, record sdk.Record) error
+	Close(ctx context.Context) error
 }

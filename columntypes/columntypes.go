@@ -28,6 +28,7 @@ import (
 
 const (
 	// sql server date, time column types.
+	// date, time column types.
 	dateType           = "date"
 	datetime2Type      = "datetime2"
 	datetimeType       = "datetime"

@@ -12,17 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sqlserver
+package writer
 
-import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
+import "errors"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/source"
-	"github.com/conduitio-labs/conduit-connector-sql-server/destination"
+var (
+	// ErrEmptyPayload occurs when there's no payload to insert.
+	ErrEmptyPayload = errors.New("payload is empty")
+	// ErrEmptyKey occurs when there is no value for key.
+	ErrEmptyKey = errors.New("key value must be provided")
 )
-
-var Connector = sdk.Connector{
-	NewSpecification: Specification,
-	NewSource:        source.New,
-	NewDestination:   destination.New,
-}
