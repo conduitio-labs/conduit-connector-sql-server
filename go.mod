@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/conduitio/conduit-connector-sdk v0.7.2
-	github.com/denisenkom/go-mssqldb v0.12.2
+	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/golang/mock v1.6.0
 	github.com/huandu/go-sqlbuilder v1.22.0
 	github.com/jmoiron/sqlx v1.3.5
