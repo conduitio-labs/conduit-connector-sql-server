@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc & Yalantis.
+// Copyright © 2023 Meroxa, Inc & Yalantis.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+//go:build sqlserver
 
-const (
-	KeyConnection string = "connection"
-	KeyTable      string = "table"
+package main
+
+import (
+	_ "github.com/conduitio/conduit-connector-sdk/cmd/paramgen"
+	_ "github.com/golang/mock/mockgen"
 )
-
-// Config contains configurable values
-// shared between source and destination SQL Server connector.
-type Config struct {
-	// Connection string connection to SQL Server database.
-	Connection string `validate:"required"`
-	// Table is a name of the table that the connector should write to or read from.
-	Table string `validate:"required"`
-}

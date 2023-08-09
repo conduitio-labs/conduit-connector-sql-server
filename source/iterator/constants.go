@@ -12,18 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package iterator
 
 const (
-	KeyConnection string = "connection"
-	KeyTable      string = "table"
-)
+	trackingTablePattern = "CONDUIT_TRACKING_%s"
 
-// Config contains configurable values
-// shared between source and destination SQL Server connector.
-type Config struct {
-	// Connection string connection to SQL Server database.
-	Connection string `validate:"required"`
-	// Table is a name of the table that the connector should write to or read from.
-	Table string `validate:"required"`
-}
+	// tracking table columns.
+	columnOperationType = "CONDUIT_OPERATION_TYPE"
+	columnTimeCreated   = "CONDUIT_TRACKING_CREATED_DATE"
+	columnTrackingID    = "CONDUIT_TRACKING_ID"
+
+	// metadata related.
+	metadataTable = "sqlserver.table"
+
+	// operation types.
+	operationTypeInsert = "INSERT"
+	operationTypeUpdate = "UPDATE"
+	operationTypeDelete = "DELETE"
+
+	// clearing buffer size.
+	idsClearingBufferSize = 50
+
+	// period after iterator clears table (seconds).
+	clearingDuration = 5
+)

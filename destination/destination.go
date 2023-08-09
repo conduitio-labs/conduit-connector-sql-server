@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate paramgen -output=paramgen_dest.go Config
+
 package destination
 
 import (
@@ -32,38 +34,32 @@ type Destination struct {
 	sdk.UnimplementedDestination
 
 	writer Writer
-	config config.Config
+	config Config
+}
+
+type Config struct {
+	config.Config
 }
 
 // New creates new instance of the Destination.
 func New() sdk.Destination {
-	return &Destination{}
+	return sdk.DestinationWithMiddleware(&Destination{}, sdk.DefaultDestinationMiddleware()...)
 }
 
 // Parameters returns a map of named sdk.Parameters that describe how to configure the Destination.
 func (d *Destination) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
-		config.KeyConnection: {
-			Description: "Connection string to SQL Server",
-			Required:    true,
-			Default:     "",
-		},
-		config.KeyTable: {
-			Description: "A name of the table that the connector should write to.",
-			Required:    true,
-			Default:     "",
-		},
-	}
+	return d.config.Parameters()
 }
 
 // Configure parses and initializes the config.
 func (d *Destination) Configure(_ context.Context, cfg map[string]string) error {
-	configuration, err := config.Parse(cfg)
+	var destConfig Config
+	err := sdk.Util.ParseConfig(cfg, &destConfig)
 	if err != nil {
-		return fmt.Errorf("parse config: %w", err)
+		return err
 	}
 
-	d.config = configuration
+	d.config = destConfig
 
 	return nil
 }

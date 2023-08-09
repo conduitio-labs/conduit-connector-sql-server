@@ -27,8 +27,7 @@ import (
 )
 
 const (
-	// sql server column types.
-	// date, time column types.
+	// sql server date, time column types.
 	dateType           = "date"
 	datetime2Type      = "datetime2"
 	datetimeType       = "datetime"
@@ -36,7 +35,7 @@ const (
 	smallDateTimeType  = "smalldatetime"
 	timeType           = "time"
 
-	// binary types.
+	// sql server binaryType types.
 	binaryType    = "binaryType"
 	varbinaryType = "varbinaryType"
 	ImageType     = "ImageType"
@@ -174,6 +173,9 @@ func ConvertStructureData(
 // GetColumnTypes returns a map containing all table's columns and their database types.
 func GetColumnTypes(ctx context.Context, querier Querier, tableName string) (map[string]string, error) {
 	rows, err := querier.QueryContext(ctx, fmt.Sprintf(querySchemaColumnTypes, tableName))
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("query column types: %w", rows.Err())
+	}
 	if err != nil {
 		return nil, fmt.Errorf("query column types: %w", err)
 	}
@@ -187,10 +189,6 @@ func GetColumnTypes(ctx context.Context, querier Querier, tableName string) (map
 		}
 
 		columnTypes[columnName] = dataType
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate rows error: %w", err)
 	}
 
 	return columnTypes, nil

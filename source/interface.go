@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package source
 
-const (
-	KeyConnection string = "connection"
-	KeyTable      string = "table"
+import (
+	"context"
+
+	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-// Config contains configurable values
-// shared between source and destination SQL Server connector.
-type Config struct {
-	// Connection string connection to SQL Server database.
-	Connection string `validate:"required"`
-	// Table is a name of the table that the connector should write to or read from.
-	Table string `validate:"required"`
+// Iterator interface.
+type Iterator interface {
+	HasNext(ctx context.Context) (bool, error)
+	Next(ctx context.Context) (sdk.Record, error)
+	Stop(ctx context.Context) error
+	Ack(ctx context.Context, rp sdk.Position) error
 }

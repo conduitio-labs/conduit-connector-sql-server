@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package iterator
 
-const (
-	KeyConnection string = "connection"
-	KeyTable      string = "table"
+import (
+	"errors"
 )
 
-// Config contains configurable values
-// shared between source and destination SQL Server connector.
-type Config struct {
-	// Connection string connection to SQL Server database.
-	Connection string `validate:"required"`
-	// Table is a name of the table that the connector should write to or read from.
-	Table string `validate:"required"`
-}
+var (
+	ErrKeyIsNotExist            = errors.New("key is not exist")
+	ErrOrderingColumnIsNotExist = errors.New("ordering column is not exist")
+	ErrWrongTrackingIDType      = errors.New("tracking id wrong type")
+	ErrNoInitializedIterator    = errors.New("not initialized iterator")
+	ErrUnknownOperatorType      = errors.New("unknown iterator type")
+)
