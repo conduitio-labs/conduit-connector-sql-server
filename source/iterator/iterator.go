@@ -16,6 +16,7 @@ package iterator
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -150,7 +151,11 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 	}
 
 	// create tracking table with all columns from `table`.
-	_, err = tx.ExecContext(ctx, fmt.Sprintf(queryCreateTrackingTable, c.trackingTable, c.table))
+	q, err := c.getCreateTrackingTableQuery(ctx, db)
+	if err != nil {
+		return fmt.Errorf("create tracking table query: %w", err)
+	}
+	_, err = tx.ExecContext(ctx, q)
 	if err != nil {
 		return fmt.Errorf("create tracking table: %w", err)
 	}
@@ -223,6 +228,48 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 	}
 
 	return nil
+}
+
+func (c *CombinedIterator) getCreateTrackingTableQuery(ctx context.Context, db *sqlx.DB) (string, error) {
+	rows, err := db.QueryContext(ctx, queryGetColumnsInfo, c.table)
+	if rows.Err() != nil {
+		return "", fmt.Errorf("query column information: %w", rows.Err())
+	}
+	if err != nil {
+		return "", fmt.Errorf("query column information: %w", err)
+	}
+	defer rows.Close()
+
+	// Construct the CREATE TABLE query for the new table
+	createQuery := fmt.Sprintf("CREATE TABLE %s (", c.trackingTable)
+	for rows.Next() {
+		var columnName, dataType string
+		var charMaxLength, numericPrecision, numericScale sql.NullInt64
+		if err := rows.Scan(&columnName, &dataType, &charMaxLength, &numericPrecision, &numericScale); err != nil {
+			return "", err
+		}
+		var columnDefinition string
+		switch dataType {
+		case "varchar", "nvarchar":
+			if charMaxLength.Valid && charMaxLength.Int64 != -1 {
+				columnDefinition = fmt.Sprintf("%s %s(%d)", columnName, dataType, charMaxLength.Int64)
+			} else {
+				columnDefinition = fmt.Sprintf("%s %s(MAX)", columnName, dataType)
+			}
+		case "numeric":
+			if numericPrecision.Valid && numericScale.Valid {
+				columnDefinition = fmt.Sprintf("%s NUMERIC(%d, %d)", columnName, numericPrecision.Int64, numericScale.Int64)
+			} else {
+				columnDefinition = fmt.Sprintf("%s NUMERIC", columnName)
+			}
+		default:
+			columnDefinition = fmt.Sprintf("%s %s", columnName, dataType)
+		}
+		createQuery += columnDefinition + ", "
+	}
+	createQuery = createQuery[:len(createQuery)-2] + ")" // Remove trailing comma
+
+	return createQuery, nil
 }
 
 // HasNext returns a bool indicating whether the iterator has the next record to return or not.
