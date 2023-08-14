@@ -173,9 +173,6 @@ func ConvertStructureData(
 // GetColumnTypes returns a map containing all table's columns and their database types.
 func GetColumnTypes(ctx context.Context, querier Querier, tableName string) (map[string]string, error) {
 	rows, err := querier.QueryContext(ctx, fmt.Sprintf(querySchemaColumnTypes, tableName))
-	if rows.Err() != nil {
-		return nil, fmt.Errorf("query column types: %w", rows.Err())
-	}
 	if err != nil {
 		return nil, fmt.Errorf("query column types: %w", err)
 	}
@@ -189,6 +186,9 @@ func GetColumnTypes(ctx context.Context, querier Querier, tableName string) (map
 		}
 
 		columnTypes[columnName] = dataType
+	}
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("iterate rows error: %w", rows.Err())
 	}
 
 	return columnTypes, nil

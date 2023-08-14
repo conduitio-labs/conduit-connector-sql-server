@@ -128,9 +128,6 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 
 	// check if table exist.
 	rows, err := tx.QueryContext(ctx, queryIfTableExist, c.trackingTable)
-	if rows.Err() != nil {
-		return fmt.Errorf("query exist table: %w", rows.Err())
-	}
 	if err != nil {
 		return fmt.Errorf("query exist table: %w", err)
 	}
@@ -148,6 +145,9 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 			// table exist, setup not needed.
 			return nil
 		}
+	}
+	if rows.Err() != nil {
+		return fmt.Errorf("iterate rows error: %w", rows.Err())
 	}
 
 	// create tracking table with all columns from `table`.
@@ -232,9 +232,6 @@ func (c *CombinedIterator) SetupCDC(ctx context.Context, db *sqlx.DB) error {
 
 func (c *CombinedIterator) getCreateTrackingTableQuery(ctx context.Context, db *sqlx.DB) (string, error) {
 	rows, err := db.QueryContext(ctx, queryGetColumnsInfo, c.table)
-	if rows.Err() != nil {
-		return "", fmt.Errorf("query column information: %w", rows.Err())
-	}
 	if err != nil {
 		return "", fmt.Errorf("query column information: %w", err)
 	}
@@ -249,7 +246,7 @@ func (c *CombinedIterator) getCreateTrackingTableQuery(ctx context.Context, db *
 			return "", err
 		}
 		var columnDefinition string
-		switch dataType {
+		switch strings.ToLower(dataType) {
 		case "varchar", "nvarchar":
 			if charMaxLength.Valid && charMaxLength.Int64 != -1 {
 				columnDefinition = fmt.Sprintf("%s %s(%d)", columnName, dataType, charMaxLength.Int64)
@@ -268,6 +265,9 @@ func (c *CombinedIterator) getCreateTrackingTableQuery(ctx context.Context, db *
 		createQuery += columnDefinition + ", "
 	}
 	createQuery = createQuery[:len(createQuery)-2] + ")" // Remove trailing comma
+	if rows.Err() != nil {
+		return "", fmt.Errorf("iterate rows error: %w", rows.Err())
+	}
 
 	return createQuery, nil
 }
@@ -373,9 +373,6 @@ func (c *CombinedIterator) switchToCDCIterator(ctx context.Context) error {
 // getPrimaryKeyField - get info about primary key field.
 func (c *CombinedIterator) getPrimaryKeyFieldFromTable(ctx context.Context, db *sqlx.DB, table string) (string, error) {
 	rows, err := db.QueryxContext(ctx, fmt.Sprintf(queryGetPrimaryKey, table, table))
-	if rows.Err() != nil {
-		return "", fmt.Errorf("get primary key: %w", rows.Err())
-	}
 	if err != nil {
 		return "", fmt.Errorf("get primary key: %w", err)
 	}
@@ -388,6 +385,9 @@ func (c *CombinedIterator) getPrimaryKeyFieldFromTable(ctx context.Context, db *
 		if err != nil {
 			return "", fmt.Errorf("scan rows: %w", err)
 		}
+	}
+	if rows.Err() != nil {
+		return "", fmt.Errorf("iterate rows error: %w", rows.Err())
 	}
 
 	return field, nil

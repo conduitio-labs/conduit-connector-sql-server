@@ -147,9 +147,6 @@ func prepareData(t *testing.T, cfg map[string]string) error {
 
 		// check if table exist.
 		rows, er := db.Query(queryIfExistTable, cfg[config.KeyTable])
-		if rows.Err() != nil {
-			t.Error(rows.Err())
-		}
 		if er != nil {
 			t.Error(er)
 		}
@@ -170,6 +167,9 @@ func prepareData(t *testing.T, cfg map[string]string) error {
 					t.Errorf("drop test tracking table: %v", err)
 				}
 			}
+		}
+		if rows.Err() != nil {
+			t.Error(rows.Err())
 		}
 
 		if err = db.Close(); err != nil {
