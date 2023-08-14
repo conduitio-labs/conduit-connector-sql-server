@@ -22,8 +22,6 @@ const (
 										WHERE TABLE_TYPE = 'BASE TABLE'
 										AND TABLE_NAME = ?`
 
-	queryCreateTrackingTable = `SELECT TOP 0 * INTO %s FROM %s`
-
 	queryAddOperationTypeColumn = `ALTER TABLE %s ADD %s VARCHAR (10)`
 
 	queryAddODateTimeColumn = `ALTER TABLE %s ADD %s datetime default getDate()`
@@ -61,6 +59,11 @@ const (
 		  CONSTRAINT_TYPE = 'PRIMARY KEY' 
 		  AND TABLE_NAME = '%s'
 	  )
-
 `
+
+	queryGetColumnsInfo = `
+		SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = ?;
+	`
 )
