@@ -8,7 +8,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/golang/mock v1.6.0
 	github.com/golangci/golangci-lint v1.61.0
-	github.com/huandu/go-sqlbuilder v1.30.0
+	github.com/huandu/go-sqlbuilder v1.30.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/matryer/is v1.4.1
 )
