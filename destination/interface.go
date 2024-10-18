@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package mock -source interface.go -destination mock/destination.go
+//go:generate mockgen -package mock -destination mock/interface.go . Writer
 
 package destination
 
 import (
 	"context"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 // Writer defines a writer interface needed for the Destination.
 type Writer interface {
-	Delete(ctx context.Context, record sdk.Record) error
-	Insert(ctx context.Context, record sdk.Record) error
-	Update(ctx context.Context, record sdk.Record) error
+	Delete(ctx context.Context, record opencdc.Record) error
+	Insert(ctx context.Context, record opencdc.Record) error
+	Update(ctx context.Context, record opencdc.Record) error
 	Close(ctx context.Context) error
 }

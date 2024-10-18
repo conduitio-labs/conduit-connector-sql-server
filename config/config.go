@@ -14,16 +14,11 @@
 
 package config
 
-const (
-	KeyConnection string = "connection"
-	KeyTable      string = "table"
-)
-
 // Config contains configurable values
 // shared between source and destination SQL Server connector.
 type Config struct {
 	// Connection string connection to SQL Server database.
-	Connection string `validate:"required"`
+	Connection string `json:"connection" validate:"required"`
 	// Table is a name of the table that the connector should write to or read from.
-	Table string `validate:"required"`
+	Table string `json:"table" validate:"required"`
 }

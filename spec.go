@@ -30,6 +30,6 @@ func Specification() sdk.Specification {
 		Description: "The SQL SERVER connector is one of Conduit plugins. " +
 			"It provides both, a source and a destination SQL SERVER connector.",
 		Version: version,
-		Author:  "Meroxa, Inc.& Yalantis",
+		Author:  "Meroxa, Inc. & Yalantis",
 	}
 }

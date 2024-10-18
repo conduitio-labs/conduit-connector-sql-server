@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate mockgen -package mock -destination mock/interface.go . Iterator
+
 package source
 
 import (
 	"context"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 // Iterator interface.
 type Iterator interface {
 	HasNext(ctx context.Context) (bool, error)
-	Next(ctx context.Context) (sdk.Record, error)
+	Next(ctx context.Context) (opencdc.Record, error)
 	Stop(ctx context.Context) error
-	Ack(ctx context.Context, rp sdk.Position) error
+	Ack(ctx context.Context, rp opencdc.Position) error
 }

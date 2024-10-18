@@ -19,13 +19,11 @@ import (
 	"errors"
 	"testing"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/golang/mock/gomock"
-
-	"github.com/matryer/is"
-
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/mock"
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/writer"
+	"github.com/conduitio/conduit-commons/opencdc"
+	"github.com/matryer/is"
+	"go.uber.org/mock/gomock"
 )
 
 func TestDestination_Write(t *testing.T) {
@@ -39,12 +37,12 @@ func TestDestination_Write(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		ctx := context.Background()
 
-		record := sdk.Record{
-			Operation: sdk.OperationCreate,
-			Key: sdk.StructuredData{
+		record := opencdc.Record{
+			Operation: opencdc.OperationCreate,
+			Key: opencdc.StructuredData{
 				"ID": 1,
 			},
-			Payload: sdk.Change{After: sdk.StructuredData{
+			Payload: opencdc.Change{After: opencdc.StructuredData{
 				"ID":   1,
 				"name": "test",
 			},
@@ -58,7 +56,7 @@ func TestDestination_Write(t *testing.T) {
 			writer: w,
 		}
 
-		c, err := d.Write(ctx, []sdk.Record{record})
+		c, err := d.Write(ctx, []opencdc.Record{record})
 		is.NoErr(err)
 
 		is.Equal(c, 1)
@@ -72,12 +70,12 @@ func TestDestination_Write(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		ctx := context.Background()
 
-		record := sdk.Record{
-			Operation: sdk.OperationUpdate,
-			Key: sdk.StructuredData{
+		record := opencdc.Record{
+			Operation: opencdc.OperationUpdate,
+			Key: opencdc.StructuredData{
 				"ID": 1,
 			},
-			Payload: sdk.Change{After: sdk.StructuredData{
+			Payload: opencdc.Change{After: opencdc.StructuredData{
 				"ID":   1,
 				"name": "test",
 			},
@@ -91,7 +89,7 @@ func TestDestination_Write(t *testing.T) {
 			writer: w,
 		}
 
-		c, err := d.Write(ctx, []sdk.Record{record})
+		c, err := d.Write(ctx, []opencdc.Record{record})
 		is.NoErr(err)
 
 		is.Equal(c, 1)
@@ -105,12 +103,12 @@ func TestDestination_Write(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		ctx := context.Background()
 
-		record := sdk.Record{
-			Operation: sdk.OperationDelete,
-			Key: sdk.StructuredData{
+		record := opencdc.Record{
+			Operation: opencdc.OperationDelete,
+			Key: opencdc.StructuredData{
 				"ID": 1,
 			},
-			Payload: sdk.Change{After: sdk.StructuredData{
+			Payload: opencdc.Change{After: opencdc.StructuredData{
 				"ID":   1,
 				"name": "test",
 			},
@@ -124,7 +122,7 @@ func TestDestination_Write(t *testing.T) {
 			writer: w,
 		}
 
-		c, err := d.Write(ctx, []sdk.Record{record})
+		c, err := d.Write(ctx, []opencdc.Record{record})
 		is.NoErr(err)
 
 		is.Equal(c, 1)
@@ -138,10 +136,10 @@ func TestDestination_Write(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		ctx := context.Background()
 
-		record := sdk.Record{
-			Operation: sdk.OperationSnapshot,
-			Position:  sdk.Position("1.0"),
-			Key: sdk.StructuredData{
+		record := opencdc.Record{
+			Operation: opencdc.OperationSnapshot,
+			Position:  opencdc.Position("1.0"),
+			Key: opencdc.StructuredData{
 				"ID": 1,
 			},
 		}
@@ -153,7 +151,7 @@ func TestDestination_Write(t *testing.T) {
 			writer: w,
 		}
 
-		_, err := d.Write(ctx, []sdk.Record{record})
+		_, err := d.Write(ctx, []opencdc.Record{record})
 		is.Equal(err != nil, true)
 	})
 }

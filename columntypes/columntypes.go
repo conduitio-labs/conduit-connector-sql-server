@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 const (
@@ -101,9 +101,9 @@ func TransformRow(_ context.Context, row map[string]any, columnTypes map[string]
 func ConvertStructureData(
 	_ context.Context,
 	columnTypes map[string]string,
-	data sdk.StructuredData,
-) (sdk.StructuredData, error) {
-	result := make(sdk.StructuredData, len(data))
+	data opencdc.StructuredData,
+) (opencdc.StructuredData, error) {
+	result := make(opencdc.StructuredData, len(data))
 
 	for key, value := range data {
 		if value == nil {

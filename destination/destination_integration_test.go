@@ -23,9 +23,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 const (
@@ -63,7 +61,7 @@ func TestIntegrationDestination_Write_Insert_Success(t *testing.T) {
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +77,7 @@ func TestIntegrationDestination_Write_Insert_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -107,11 +105,11 @@ func TestIntegrationDestination_Write_Insert_Success(t *testing.T) {
 		"cl_float":     1234.1234,
 	}
 
-	count, err := dest.Write(ctx, []sdk.Record{
+	count, err := dest.Write(ctx, []opencdc.Record{
 		{
-			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
-			Operation: sdk.OperationSnapshot,
-			Key:       sdk.StructuredData{"id": "1"},
+			Payload:   opencdc.Change{After: opencdc.StructuredData(preparedData)},
+			Operation: opencdc.OperationSnapshot,
+			Key:       opencdc.StructuredData{"id": "1"},
 		},
 	},
 	)
@@ -165,7 +163,7 @@ func TestIntegrationDestination_Write_Update_Success(t *testing.T) {
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,7 +179,7 @@ func TestIntegrationDestination_Write_Update_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -209,11 +207,11 @@ func TestIntegrationDestination_Write_Update_Success(t *testing.T) {
 		"cl_float":     1234.1234,
 	}
 
-	count, err := dest.Write(ctx, []sdk.Record{
+	count, err := dest.Write(ctx, []opencdc.Record{
 		{
-			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
-			Operation: sdk.OperationSnapshot,
-			Key:       sdk.StructuredData{"id": "1"},
+			Payload:   opencdc.Change{After: opencdc.StructuredData(preparedData)},
+			Operation: opencdc.OperationSnapshot,
+			Key:       opencdc.StructuredData{"id": "1"},
 		},
 	},
 	)
@@ -228,11 +226,11 @@ func TestIntegrationDestination_Write_Update_Success(t *testing.T) {
 
 	preparedData["cl_varchar"] = preparedVarchar
 
-	_, err = dest.Write(ctx, []sdk.Record{
+	_, err = dest.Write(ctx, []opencdc.Record{
 		{
-			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
-			Operation: sdk.OperationUpdate,
-			Key:       sdk.StructuredData{"id": "1"},
+			Payload:   opencdc.Change{After: opencdc.StructuredData(preparedData)},
+			Operation: opencdc.OperationUpdate,
+			Key:       opencdc.StructuredData{"id": "1"},
 		},
 	},
 	)
@@ -281,7 +279,7 @@ func TestIntegrationDestination_Write_Update_Composite_Keys_Success(t *testing.T
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -297,7 +295,7 @@ func TestIntegrationDestination_Write_Update_Composite_Keys_Success(t *testing.T
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -325,11 +323,11 @@ func TestIntegrationDestination_Write_Update_Composite_Keys_Success(t *testing.T
 		"cl_float":     1234.1234,
 	}
 
-	count, err := dest.Write(ctx, []sdk.Record{
+	count, err := dest.Write(ctx, []opencdc.Record{
 		{
-			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
-			Operation: sdk.OperationSnapshot,
-			Key:       sdk.StructuredData{"id": "1"},
+			Payload:   opencdc.Change{After: opencdc.StructuredData(preparedData)},
+			Operation: opencdc.OperationSnapshot,
+			Key:       opencdc.StructuredData{"id": "1"},
 		},
 	},
 	)
@@ -344,11 +342,11 @@ func TestIntegrationDestination_Write_Update_Composite_Keys_Success(t *testing.T
 
 	preparedData["cl_varchar"] = preparedVarchar
 
-	_, err = dest.Write(ctx, []sdk.Record{
+	_, err = dest.Write(ctx, []opencdc.Record{
 		{
-			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
-			Operation: sdk.OperationUpdate,
-			Key:       sdk.StructuredData{"id": "1", "cl_tinyint": 2},
+			Payload:   opencdc.Change{After: opencdc.StructuredData(preparedData)},
+			Operation: opencdc.OperationUpdate,
+			Key:       opencdc.StructuredData{"id": "1", "cl_tinyint": 2},
 		},
 	},
 	)
@@ -395,7 +393,7 @@ func TestIntegrationDestination_Write_Delete_Success(t *testing.T) {
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -411,7 +409,7 @@ func TestIntegrationDestination_Write_Delete_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -439,11 +437,11 @@ func TestIntegrationDestination_Write_Delete_Success(t *testing.T) {
 		"cl_float":     1234.1234,
 	}
 
-	count, err := dest.Write(ctx, []sdk.Record{
+	count, err := dest.Write(ctx, []opencdc.Record{
 		{
-			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
-			Operation: sdk.OperationSnapshot,
-			Key:       sdk.StructuredData{"id": "1"},
+			Payload:   opencdc.Change{After: opencdc.StructuredData(preparedData)},
+			Operation: opencdc.OperationSnapshot,
+			Key:       opencdc.StructuredData{"id": "1"},
 		},
 	},
 	)
@@ -455,11 +453,11 @@ func TestIntegrationDestination_Write_Delete_Success(t *testing.T) {
 		t.Error(errors.New("count mismatched"))
 	}
 
-	count, err = dest.Write(ctx, []sdk.Record{
+	count, err = dest.Write(ctx, []opencdc.Record{
 		{
-			Payload:   sdk.Change{After: sdk.StructuredData(preparedData)},
-			Operation: sdk.OperationDelete,
-			Key:       sdk.StructuredData{"id": "1"},
+			Payload:   opencdc.Change{After: opencdc.StructuredData(preparedData)},
+			Operation: opencdc.OperationDelete,
+			Key:       opencdc.StructuredData{"id": "1"},
 		},
 	},
 	)
@@ -507,8 +505,8 @@ func prepareConfig() (map[string]string, error) {
 	}
 
 	return map[string]string{
-		config.KeyConnection: conn,
-		config.KeyTable:      integrationTable,
+		ConfigConnection: conn,
+		ConfigTable:      integrationTable,
 	}, nil
 }
 

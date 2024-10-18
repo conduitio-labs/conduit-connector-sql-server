@@ -18,12 +18,12 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/jmoiron/sqlx"
-
-	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
-
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/iterator"
+	"github.com/conduitio/conduit-commons/config"
+	"github.com/conduitio/conduit-commons/opencdc"
+	sdk "github.com/conduitio/conduit-connector-sdk"
+	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
+	"github.com/jmoiron/sqlx"
 )
 
 // Source connector.
@@ -39,15 +39,15 @@ func New() sdk.Source {
 	return sdk.SourceWithMiddleware(&Source{}, sdk.DefaultSourceMiddleware()...)
 }
 
-// Parameters returns a map of named sdk.Parameters that describe how to configure the Source.
-func (s *Source) Parameters() map[string]sdk.Parameter {
+// Parameters returns a map of named config.Parameters that describe how to configure the Source.
+func (s *Source) Parameters() config.Parameters {
 	return s.config.Parameters()
 }
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
-func (s *Source) Configure(_ context.Context, cfg map[string]string) error {
+func (s *Source) Configure(ctx context.Context, cfg config.Config) error {
 	var sourceConfig Config
-	err := sdk.Util.ParseConfig(cfg, &sourceConfig)
+	err := sdk.Util.ParseConfig(ctx, cfg, &sourceConfig, New().Parameters())
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (s *Source) Configure(_ context.Context, cfg map[string]string) error {
 }
 
 // Open prepare the plugin to start sending records from the given position.
-func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
+func (s *Source) Open(ctx context.Context, rp opencdc.Position) error {
 	db, err := sqlx.Open("mssql", s.config.Connection)
 	if err != nil {
 		return fmt.Errorf("connect to sql server: %w", err)
@@ -78,19 +78,19 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 }
 
 // Read gets the next object from the sql server.
-func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
+func (s *Source) Read(ctx context.Context) (opencdc.Record, error) {
 	hasNext, err := s.iterator.HasNext(ctx)
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("has next: %w", err)
+		return opencdc.Record{}, fmt.Errorf("has next: %w", err)
 	}
 
 	if !hasNext {
-		return sdk.Record{}, sdk.ErrBackoffRetry
+		return opencdc.Record{}, sdk.ErrBackoffRetry
 	}
 
 	r, err := s.iterator.Next(ctx)
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("next: %w", err)
+		return opencdc.Record{}, fmt.Errorf("next: %w", err)
 	}
 
 	return r, nil
@@ -109,6 +109,6 @@ func (s *Source) Teardown(ctx context.Context) error {
 }
 
 // Ack check if record with position was recorded.
-func (s *Source) Ack(ctx context.Context, p sdk.Position) error {
+func (s *Source) Ack(ctx context.Context, p opencdc.Position) error {
 	return s.iterator.Ack(ctx, p)
 }
