@@ -26,7 +26,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/matryer/is"
@@ -89,7 +88,7 @@ func TestSource_Snapshot_Success(t *testing.T) {
 		t.Skip()
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +217,7 @@ func TestSource_Snapshot_Empty_Table(t *testing.T) {
 		t.Skip()
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,9 +284,9 @@ func TestSource_Snapshot_Key_From_Config(t *testing.T) {
 	}
 
 	// set key.
-	cfg[KeyPrimaryKey] = "cl_tinyint"
+	cfg[ConfigPrimaryKey] = "cl_tinyint"
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -365,9 +364,9 @@ func TestSource_Snapshot_Key_From_Table(t *testing.T) {
 	}
 
 	// set empty key.
-	cfg[KeyPrimaryKey] = ""
+	cfg[ConfigPrimaryKey] = ""
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -443,7 +442,7 @@ func TestSource_CDC_Success(t *testing.T) {
 		t.Skip()
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -569,7 +568,7 @@ func TestSource_Snapshot_Off(t *testing.T) {
 		t.Skip()
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -598,7 +597,7 @@ func TestSource_Snapshot_Off(t *testing.T) {
 	}
 
 	// turn off snapshot
-	cfg[KeySnapshot] = "false"
+	cfg[ConfigSnapshot] = "false"
 
 	s := new(Source)
 
@@ -643,10 +642,10 @@ func prepareConfigMap(table string) (map[string]string, error) {
 	}
 
 	return map[string]string{
-		config.KeyConnection: connection,
-		config.KeyTable:      table,
-		KeyPrimaryKey:        "id",
-		KeyOrderingColumn:    "id",
+		ConfigConnection:     connection,
+		ConfigTable:          table,
+		ConfigPrimaryKey:     "id",
+		ConfigOrderingColumn: "id",
 	}, nil
 }
 

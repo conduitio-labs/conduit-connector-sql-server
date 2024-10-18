@@ -22,8 +22,8 @@ import (
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/mock"
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/writer"
 	"github.com/conduitio/conduit-commons/opencdc"
-	"github.com/golang/mock/gomock"
 	"github.com/matryer/is"
+	"go.uber.org/mock/gomock"
 )
 
 func TestDestination_Write(t *testing.T) {

@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	"github.com/conduitio/conduit-commons/opencdc"
 )
 
@@ -62,7 +61,7 @@ func TestIntegrationDestination_Write_Insert_Success(t *testing.T) {
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +77,7 @@ func TestIntegrationDestination_Write_Insert_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -164,7 +163,7 @@ func TestIntegrationDestination_Write_Update_Success(t *testing.T) {
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +179,7 @@ func TestIntegrationDestination_Write_Update_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -280,7 +279,7 @@ func TestIntegrationDestination_Write_Update_Composite_Keys_Success(t *testing.T
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -296,7 +295,7 @@ func TestIntegrationDestination_Write_Update_Composite_Keys_Success(t *testing.T
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -394,7 +393,7 @@ func TestIntegrationDestination_Write_Delete_Success(t *testing.T) {
 		t.Skip(err)
 	}
 
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[ConfigConnection])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -410,7 +409,7 @@ func TestIntegrationDestination_Write_Delete_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer clearData(ctx, cfg[config.KeyConnection]) //nolint:errcheck,nolintlint
+	defer clearData(ctx, cfg[ConfigConnection]) //nolint:errcheck,nolintlint
 
 	dest := New()
 
@@ -506,8 +505,8 @@ func prepareConfig() (map[string]string, error) {
 	}
 
 	return map[string]string{
-		config.KeyConnection: conn,
-		config.KeyTable:      integrationTable,
+		ConfigConnection: conn,
+		ConfigTable:      integrationTable,
 	}, nil
 }
 

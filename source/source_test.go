@@ -25,7 +25,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/mock"
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
 	"github.com/conduitio/conduit-commons/opencdc"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSource_Read(t *testing.T) {

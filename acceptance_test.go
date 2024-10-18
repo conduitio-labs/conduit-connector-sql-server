@@ -24,8 +24,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit"
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
-	s "github.com/conduitio-labs/conduit-connector-sql-server/source"
+	"github.com/conduitio-labs/conduit-connector-sql-server/source"
 	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
@@ -54,7 +53,7 @@ func (d *driver) GenerateRecord(_ *testing.T, operation opencdc.Operation) openc
 		Position:  nil,
 		Operation: operation,
 		Metadata: map[string]string{
-			config.KeyTable: d.Config.DestinationConfig[config.KeyTable],
+			source.ConfigTable: d.Config.DestinationConfig[source.ConfigTable],
 		},
 		Key: opencdc.StructuredData{
 			"ID": d.counter,
@@ -90,7 +89,7 @@ func beforeTest(_ *testing.T, cfg map[string]string) func(t *testing.T) {
 		table := randomIdentifier(t)
 		t.Logf("table under test: %v", table)
 
-		cfg[config.KeyTable] = table
+		cfg[source.ConfigTable] = table
 
 		err := prepareData(t, cfg)
 		if err != nil {
@@ -108,19 +107,19 @@ func prepareConfig(t *testing.T) map[string]string {
 	}
 
 	return map[string]string{
-		config.KeyConnection: conn,
-		s.KeyOrderingColumn:  "ID",
-		s.KeyPrimaryKey:      "ID",
+		source.ConfigConnection:     conn,
+		source.ConfigOrderingColumn: "ID",
+		source.ConfigPrimaryKey:     "ID",
 	}
 }
 
 func prepareData(t *testing.T, cfg map[string]string) error {
-	db, err := sql.Open("mssql", cfg[config.KeyConnection])
+	db, err := sql.Open("mssql", cfg[source.ConfigConnection])
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(fmt.Sprintf(queryCreateTestTable, cfg[config.KeyTable]))
+	_, err = db.Exec(fmt.Sprintf(queryCreateTestTable, cfg[source.ConfigTable]))
 	if err != nil {
 		return err
 	}
@@ -129,22 +128,22 @@ func prepareData(t *testing.T, cfg map[string]string) error {
 
 	// drop table
 	t.Cleanup(func() {
-		db, err = sql.Open("mssql", cfg[config.KeyConnection])
+		db, err = sql.Open("mssql", cfg[source.ConfigConnection])
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		queryDropTable := fmt.Sprintf(queryDropTestTable, cfg[config.KeyTable])
+		queryDropTable := fmt.Sprintf(queryDropTestTable, cfg[source.ConfigTable])
 
 		_, err = db.Exec(queryDropTable)
 		if err != nil {
 			t.Errorf("drop test table: %v", err)
 		}
 
-		queryDropTrackingTable := fmt.Sprintf(queryDropTestTrackingTable, cfg[config.KeyTable])
+		queryDropTrackingTable := fmt.Sprintf(queryDropTestTrackingTable, cfg[source.ConfigTable])
 
 		// check if table exist.
-		rows, er := db.Query(queryIfExistTable, cfg[config.KeyTable])
+		rows, er := db.Query(queryIfExistTable, cfg[source.ConfigTable])
 		if er != nil {
 			t.Error(er)
 		}

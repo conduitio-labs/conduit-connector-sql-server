@@ -23,6 +23,7 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/writer"
+	cconfig "github.com/conduitio/conduit-commons/config"
 	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
@@ -46,12 +47,12 @@ func New() sdk.Destination {
 }
 
 // Parameters returns a map of named config.Parameters that describe how to configure the Destination.
-func (d *Destination) Parameters() config.Parameters {
+func (d *Destination) Parameters() cconfig.Parameters {
 	return d.config.Parameters()
 }
 
 // Configure parses and initializes the config.
-func (d *Destination) Configure(_ context.Context, cfg config.Config) error {
+func (d *Destination) Configure(ctx context.Context, cfg cconfig.Config) error {
 	var destConfig Config
 	err := sdk.Util.ParseConfig(ctx, cfg, &destConfig, New().Parameters())
 	if err != nil {

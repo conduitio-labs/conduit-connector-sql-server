@@ -20,19 +20,6 @@ import (
 
 //go:generate paramgen -output=paramgen_src.go Config
 
-const (
-	// KeyOrderingColumn is a config name for an ordering column.
-	KeyOrderingColumn = "orderingColumn"
-	// KeyColumns is a config name for columns.
-	KeyColumns = "columns"
-	// KeyBatchSize is a config name for a batch size.
-	KeyBatchSize = "batchSize"
-	// KeyPrimaryKey is column name that records should use for their `Key` fields.
-	KeyPrimaryKey string = "primaryKey"
-	// KeySnapshot is a config name for snapshotMode.
-	KeySnapshot = "snapshot"
-)
-
 // Config holds source specific configurable values.
 type Config struct {
 	config.Config

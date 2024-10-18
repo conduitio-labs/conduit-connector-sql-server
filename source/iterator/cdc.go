@@ -166,7 +166,7 @@ func (i *CDCIterator) Next(ctx context.Context) (opencdc.Record, error) {
 			opencdc.StructuredData{i.key: transformRow[i.key]}, nil, opencdc.RawData(transformedRowBytes)), nil
 	case operationTypeDelete:
 		return sdk.Util.Source.NewRecordDelete(convertedPosition, metadata,
-			opencdc.StructuredData{i.key: transformRow[i.key]}), nil
+			opencdc.StructuredData{i.key: transformRow[i.key]}, nil), nil
 	default:
 		return opencdc.Record{}, ErrUnknownOperatorType
 	}
