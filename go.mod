@@ -1,8 +1,10 @@
 module github.com/conduitio-labs/conduit-connector-sql-server
 
-go 1.22.2
+go 1.23.2
+
 require (
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
+	github.com/conduitio/conduit-commons v0.4.0
 	github.com/conduitio/conduit-connector-sdk v0.11.0
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/golang/mock v1.6.0
@@ -49,7 +51,6 @@ require (
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.2.0 // indirect
-	github.com/conduitio/conduit-commons v0.4.0 // indirect
 	github.com/conduitio/conduit-connector-protocol v0.8.0 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.13.5 // indirect

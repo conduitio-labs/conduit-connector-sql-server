@@ -26,10 +26,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-sql-server/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/matryer/is"
-
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 )
 
 const (
@@ -521,7 +521,7 @@ func TestSource_CDC_Success(t *testing.T) {
 	}
 
 	is.Equal(wantedRecordBytes, r.Payload.After.Bytes())
-	is.Equal(sdk.OperationCreate, r.Operation)
+	is.Equal(opencdc.OperationCreate, r.Operation)
 
 	// check updated data.
 	r, err = s.Read(ctx)
@@ -539,7 +539,7 @@ func TestSource_CDC_Success(t *testing.T) {
 	}
 
 	is.Equal(wantedRecordBytes, r.Payload.After.Bytes())
-	is.Equal(sdk.OperationUpdate, r.Operation)
+	is.Equal(opencdc.OperationUpdate, r.Operation)
 
 	// check deleted data.
 	r, err = s.Read(ctx)
@@ -547,7 +547,7 @@ func TestSource_CDC_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	is.Equal(sdk.OperationDelete, r.Operation)
+	is.Equal(opencdc.OperationDelete, r.Operation)
 
 	// check teardown.
 	err = s.Teardown(ctx)
@@ -625,7 +625,7 @@ func TestSource_Snapshot_Off(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(r.Operation, sdk.OperationUpdate) {
+	if !reflect.DeepEqual(r.Operation, opencdc.OperationUpdate) {
 		t.Fatal(errors.New("not wanted type"))
 	}
 

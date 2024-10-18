@@ -21,12 +21,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
-	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
-
 	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	"github.com/conduitio-labs/conduit-connector-sql-server/destination/writer"
+	"github.com/conduitio/conduit-commons/opencdc"
+	sdk "github.com/conduitio/conduit-connector-sdk"
+	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
 )
 
 // Destination SQL Server Connector persists records to a sql server database.
@@ -46,15 +45,15 @@ func New() sdk.Destination {
 	return sdk.DestinationWithMiddleware(&Destination{}, sdk.DefaultDestinationMiddleware()...)
 }
 
-// Parameters returns a map of named sdk.Parameters that describe how to configure the Destination.
-func (d *Destination) Parameters() map[string]sdk.Parameter {
+// Parameters returns a map of named config.Parameters that describe how to configure the Destination.
+func (d *Destination) Parameters() config.Parameters {
 	return d.config.Parameters()
 }
 
 // Configure parses and initializes the config.
-func (d *Destination) Configure(_ context.Context, cfg map[string]string) error {
+func (d *Destination) Configure(_ context.Context, cfg config.Config) error {
 	var destConfig Config
-	err := sdk.Util.ParseConfig(cfg, &destConfig)
+	err := sdk.Util.ParseConfig(ctx, cfg, &destConfig, New().Parameters())
 	if err != nil {
 		return err
 	}
@@ -88,7 +87,7 @@ func (d *Destination) Open(ctx context.Context) error {
 }
 
 // Write writes a record into a Destination.
-func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, error) {
+func (d *Destination) Write(ctx context.Context, records []opencdc.Record) (int, error) {
 	for i, record := range records {
 		err := sdk.Util.Destination.Route(ctx, record,
 			d.writer.Insert,

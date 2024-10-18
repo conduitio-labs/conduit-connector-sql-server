@@ -23,13 +23,11 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
-	"github.com/conduitio-labs/conduit-connector-sql-server/config"
-
 	"github.com/brianvoe/gofakeit"
-
+	"github.com/conduitio-labs/conduit-connector-sql-server/config"
 	s "github.com/conduitio-labs/conduit-connector-sql-server/source"
+	"github.com/conduitio/conduit-commons/opencdc"
+	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
 const (
@@ -48,20 +46,20 @@ type driver struct {
 	counter int64
 }
 
-// GenerateRecord generates a random sdk.Record.
-func (d *driver) GenerateRecord(_ *testing.T, operation sdk.Operation) sdk.Record {
+// GenerateRecord generates a random opencdc.Record.
+func (d *driver) GenerateRecord(_ *testing.T, operation opencdc.Operation) opencdc.Record {
 	atomic.AddInt64(&d.counter, 1)
 
-	return sdk.Record{
+	return opencdc.Record{
 		Position:  nil,
 		Operation: operation,
 		Metadata: map[string]string{
 			config.KeyTable: d.Config.DestinationConfig[config.KeyTable],
 		},
-		Key: sdk.StructuredData{
+		Key: opencdc.StructuredData{
 			"ID": d.counter,
 		},
-		Payload: sdk.Change{After: sdk.RawData(
+		Payload: opencdc.Change{After: opencdc.RawData(
 			fmt.Sprintf(
 				`{"ID":%d,"NAME":"%s"}`, d.counter, gofakeit.Name(),
 			),

@@ -20,13 +20,11 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/jmoiron/sqlx"
-
-	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
-
 	"github.com/conduitio-labs/conduit-connector-sql-server/columntypes"
 	"github.com/conduitio-labs/conduit-connector-sql-server/source/position"
+	"github.com/conduitio/conduit-commons/opencdc"
+	_ "github.com/denisenkom/go-mssqldb" //nolint:revive,nolintlint
+	"github.com/jmoiron/sqlx"
 )
 
 // CombinedIterator combined iterator.
@@ -62,7 +60,7 @@ func NewCombinedIterator(
 	columns []string,
 	batchSize int,
 	snapshot bool,
-	sdkPosition sdk.Position,
+	sdkPosition opencdc.Position,
 ) (*CombinedIterator, error) {
 	var err error
 
@@ -301,7 +299,7 @@ func (c *CombinedIterator) HasNext(ctx context.Context) (bool, error) {
 }
 
 // Next returns the next record.
-func (c *CombinedIterator) Next(ctx context.Context) (sdk.Record, error) {
+func (c *CombinedIterator) Next(ctx context.Context) (opencdc.Record, error) {
 	switch {
 	case c.snapshot != nil:
 		return c.snapshot.Next(ctx)
@@ -310,7 +308,7 @@ func (c *CombinedIterator) Next(ctx context.Context) (sdk.Record, error) {
 		return c.cdc.Next(ctx)
 
 	default:
-		return sdk.Record{}, ErrNoInitializedIterator
+		return opencdc.Record{}, ErrNoInitializedIterator
 	}
 }
 
@@ -328,7 +326,7 @@ func (c *CombinedIterator) Stop(ctx context.Context) error {
 }
 
 // Ack collect tracking ids for removing.
-func (c *CombinedIterator) Ack(ctx context.Context, rp sdk.Position) error {
+func (c *CombinedIterator) Ack(ctx context.Context, rp opencdc.Position) error {
 	if c.cdc == nil {
 		return nil
 	}

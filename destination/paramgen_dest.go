@@ -3,26 +3,24 @@
 
 package destination
 
-import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
-)
+import "github.com/conduitio/conduit-commons/config"
 
-func (Config) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
+func (Config) Parameters() config.Parameters {
+	return map[string]config.Parameter{
 		"connection": {
 			Default:     "",
 			Description: "connection string connection to SQL Server database.",
-			Type:        sdk.ParameterTypeString,
-			Validations: []sdk.Validation{
-				sdk.ValidationRequired{},
+			Type:        config.ParameterTypeString,
+			Validations: []config.Validation{
+				config.ValidationRequired{},
 			},
 		},
 		"table": {
 			Default:     "",
 			Description: "table is a name of the table that the connector should write to or read from.",
-			Type:        sdk.ParameterTypeString,
-			Validations: []sdk.Validation{
-				sdk.ValidationRequired{},
+			Type:        config.ParameterTypeString,
+			Validations: []config.Validation{
+				config.ValidationRequired{},
 			},
 		},
 	}
