@@ -21,6 +21,7 @@ import (
 type MockIterator struct {
 	ctrl     *gomock.Controller
 	recorder *MockIteratorMockRecorder
+	isgomock struct{}
 }
 
 // MockIteratorMockRecorder is the mock recorder for MockIterator.
@@ -41,59 +42,59 @@ func (m *MockIterator) EXPECT() *MockIteratorMockRecorder {
 }
 
 // Ack mocks base method.
-func (m *MockIterator) Ack(arg0 context.Context, arg1 opencdc.Position) error {
+func (m *MockIterator) Ack(ctx context.Context, rp opencdc.Position) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Ack", arg0, arg1)
+	ret := m.ctrl.Call(m, "Ack", ctx, rp)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Ack indicates an expected call of Ack.
-func (mr *MockIteratorMockRecorder) Ack(arg0, arg1 any) *gomock.Call {
+func (mr *MockIteratorMockRecorder) Ack(ctx, rp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ack", reflect.TypeOf((*MockIterator)(nil).Ack), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ack", reflect.TypeOf((*MockIterator)(nil).Ack), ctx, rp)
 }
 
 // HasNext mocks base method.
-func (m *MockIterator) HasNext(arg0 context.Context) (bool, error) {
+func (m *MockIterator) HasNext(ctx context.Context) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasNext", arg0)
+	ret := m.ctrl.Call(m, "HasNext", ctx)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // HasNext indicates an expected call of HasNext.
-func (mr *MockIteratorMockRecorder) HasNext(arg0 any) *gomock.Call {
+func (mr *MockIteratorMockRecorder) HasNext(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasNext", reflect.TypeOf((*MockIterator)(nil).HasNext), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasNext", reflect.TypeOf((*MockIterator)(nil).HasNext), ctx)
 }
 
 // Next mocks base method.
-func (m *MockIterator) Next(arg0 context.Context) (opencdc.Record, error) {
+func (m *MockIterator) Next(ctx context.Context) (opencdc.Record, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Next", arg0)
+	ret := m.ctrl.Call(m, "Next", ctx)
 	ret0, _ := ret[0].(opencdc.Record)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Next indicates an expected call of Next.
-func (mr *MockIteratorMockRecorder) Next(arg0 any) *gomock.Call {
+func (mr *MockIteratorMockRecorder) Next(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockIterator)(nil).Next), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockIterator)(nil).Next), ctx)
 }
 
 // Stop mocks base method.
-func (m *MockIterator) Stop(arg0 context.Context) error {
+func (m *MockIterator) Stop(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stop", arg0)
+	ret := m.ctrl.Call(m, "Stop", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Stop indicates an expected call of Stop.
-func (mr *MockIteratorMockRecorder) Stop(arg0 any) *gomock.Call {
+func (mr *MockIteratorMockRecorder) Stop(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockIterator)(nil).Stop), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockIterator)(nil).Stop), ctx)
 }
