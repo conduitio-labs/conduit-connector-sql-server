@@ -21,6 +21,7 @@ import (
 type MockWriter struct {
 	ctrl     *gomock.Controller
 	recorder *MockWriterMockRecorder
+	isgomock struct{}
 }
 
 // MockWriterMockRecorder is the mock recorder for MockWriter.
@@ -41,57 +42,57 @@ func (m *MockWriter) EXPECT() *MockWriterMockRecorder {
 }
 
 // Close mocks base method.
-func (m *MockWriter) Close(arg0 context.Context) error {
+func (m *MockWriter) Close(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close", arg0)
+	ret := m.ctrl.Call(m, "Close", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockWriterMockRecorder) Close(arg0 any) *gomock.Call {
+func (mr *MockWriterMockRecorder) Close(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockWriter)(nil).Close), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockWriter)(nil).Close), ctx)
 }
 
 // Delete mocks base method.
-func (m *MockWriter) Delete(arg0 context.Context, arg1 opencdc.Record) error {
+func (m *MockWriter) Delete(ctx context.Context, record opencdc.Record) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret := m.ctrl.Call(m, "Delete", ctx, record)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockWriterMockRecorder) Delete(arg0, arg1 any) *gomock.Call {
+func (mr *MockWriterMockRecorder) Delete(ctx, record any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockWriter)(nil).Delete), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockWriter)(nil).Delete), ctx, record)
 }
 
 // Insert mocks base method.
-func (m *MockWriter) Insert(arg0 context.Context, arg1 opencdc.Record) error {
+func (m *MockWriter) Insert(ctx context.Context, record opencdc.Record) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", arg0, arg1)
+	ret := m.ctrl.Call(m, "Insert", ctx, record)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Insert indicates an expected call of Insert.
-func (mr *MockWriterMockRecorder) Insert(arg0, arg1 any) *gomock.Call {
+func (mr *MockWriterMockRecorder) Insert(ctx, record any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockWriter)(nil).Insert), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockWriter)(nil).Insert), ctx, record)
 }
 
 // Update mocks base method.
-func (m *MockWriter) Update(arg0 context.Context, arg1 opencdc.Record) error {
+func (m *MockWriter) Update(ctx context.Context, record opencdc.Record) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	ret := m.ctrl.Call(m, "Update", ctx, record)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockWriterMockRecorder) Update(arg0, arg1 any) *gomock.Call {
+func (mr *MockWriterMockRecorder) Update(ctx, record any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockWriter)(nil).Update), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockWriter)(nil).Update), ctx, record)
 }
