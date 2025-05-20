@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
-	github.com/conduitio/conduit-commons v0.5.3
+	github.com/conduitio/conduit-commons v0.5.4
 	github.com/conduitio/conduit-connector-sdk v0.12.0
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/huandu/go-sqlbuilder v1.35.0
