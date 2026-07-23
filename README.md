@@ -73,7 +73,7 @@ This behavior is enabled by default, but can be turned off by adding "snapshot":
 
 ### Change Data Capture (CDC)
 
-This connector implements CDC features for DB2 by adding a tracking table and triggers to populate it. The tracking
+This connector implements CDC features for SQL Server by adding a tracking table and triggers to populate it. The tracking
 table has the same name as a target table with the prefix `CONDUIT_TRACKING_`. The tracking table has all the
 same columns as the target table plus three additional columns:
 
